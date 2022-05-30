@@ -19,7 +19,6 @@ stylesheet = """
     Window QMenuBar::item:selected {
         background: #2e2d2b;
     }
-
     Window QMenuBar::item:pressed {
         background: #2a2927;
     }
@@ -28,13 +27,12 @@ stylesheet = """
         background: #2e2d2b;
     }
     Window QMenuBar QMenu::item {
-
     }
     Window QMenuBar QMenu::item:selected {
-        background: #2e2d2b;
+        background: #383838;
     }
     Window QMenuBar QMenu::item:pressed {
-        background: #2a2927;
+        background: #343434;
     }
 
 """
