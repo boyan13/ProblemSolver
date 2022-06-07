@@ -5,28 +5,42 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QSizePolicy, QVBoxLayout, QHBoxLayout, QSizeGrip
 
-from gui.Windows11_Dark.stylesheets.stylesheet import Windows11_Dark_stylesheet
-from gui.Windows11_Dark.elements.title_bar_buttons import MinimizeButton, FullscreenButton, CloseButton
-from gui.widgets import StyleEnabledWidget, RoundEdgesMixin
-from gui.utils import nulled_layout
+import gui.Windows11_Dark.window
+from gui.Windows11_Dark.stylesheet import Windows11_Dark_stylesheet
+from gui.Windows11_Dark.Elements.title_bar_buttons import MinimizeButton, FullscreenButton, CloseButton
+from gui.Windows11_Dark.Components.widgets import StyleEnabledWidget, MaterialIconButton
+from gui.Windows11_Dark.Components.mixins import RoundEdgesMixin
+from gui.utilities import nulled_layout
+from gui.Windows11_Dark import constants as const
 # ----------------------------------------------------------------------------------------------------------------------
-
 
 class Window(RoundEdgesMixin, StyleEnabledWidget):
 
-    BORDER_COLOR = '#454545'
+    BORDER_COLOR = '#606060'  # '#454545'
     BACKGROUND_COLOR = '#21201f'
-    BORDER_WIDTH = 2
-    BORDER_RADIUS = 10
-
+    BORDER_WIDTH = 1
+    BORDER_RADIUS = 11
     TITLE_BAR_HEIGHT = 34
     STATUS_BAR_HEIGHT = 26
 
-    # ------------------------------------------------------------------------------------------------------------------
-
     class TitleBar(StyleEnabledWidget):
+
+        class MinimizeButton(MaterialIconButton):
+            ICON_CODE = '\ue931'
+            ICON_SIZE = 18
+
+        class FullscreenButton(MaterialIconButton):
+            ICON_CODE = '\ue3c6'
+            ICON_SIZE = 15
+
+        class CloseButton(MaterialIconButton):
+            ICON_CODE = '\ue5cd'
+            ICON_SIZE = 18
+
         def __init__(self, parent=None):
             super().__init__(parent)
+
+            self.setAttribute(Qt.WA_TranslucentBackground)
             self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Maximum)
             self.setFixedHeight(self.parent().TITLE_BAR_HEIGHT)
 
@@ -83,9 +97,16 @@ class Window(RoundEdgesMixin, StyleEnabledWidget):
         pass
 
     # ------------------------------------------------------------------------------------------------------------------
+    #
+    #
+    # Init
+    #
+    #
+    # ------------------------------------------------------------------------------------------------------------------
 
     def __init__(self, parent=None, dimensions: typing.Tuple[int, int] = (600, 400)):
         super().__init__(parent)
+
         self.setStyleSheet(Windows11_Dark_stylesheet)
         self.setAttribute(Qt.WA_StyledBackground)
         self.setAttribute(Qt.WA_TranslucentBackground)
@@ -99,7 +120,13 @@ class Window(RoundEdgesMixin, StyleEnabledWidget):
 
         self._setup_view()
 
+    # ------------------------------------------------------------------------------------------------------------------
+    #
+    #
     # Setups
+    #
+    #
+    # ------------------------------------------------------------------------------------------------------------------
 
     def _setup_view(self):
 
@@ -112,7 +139,6 @@ class Window(RoundEdgesMixin, StyleEnabledWidget):
                 menu.addAction(a)
 
             self.menu_bar = QtWidgets.QMenuBar(self)
-
             self.file_menu = self.menu_bar.addMenu("&File")
             self.edit_menu = self.menu_bar.addMenu("&Edit")
             self.view_menu = self.menu_bar.addMenu("&View")
@@ -122,17 +148,14 @@ class Window(RoundEdgesMixin, StyleEnabledWidget):
             new_action(self.file_menu, "&Open")
             new_action(self.file_menu, "&Save")
             new_action(self.file_menu, "&Exit")
-
             new_action(self.edit_menu, "&Copy")
             new_action(self.edit_menu, "&Paste")
             new_action(self.edit_menu, "&Cut")
-
             new_action(self.view_menu, "&Reset window size")
-
             new_action(self.help_menu, "&About")
             new_action(self.help_menu, "&Shortcuts")
 
-            self.view_menu.actions()[0].triggered.connect(self.view__reset_window_size)
+            self.view_menu.actions()[0].triggered.connect(self.menu__view__reset_window_size)
 
         def _build_status_bar():
             self.size_grip = QtWidgets.QSizeGrip(self)
@@ -144,6 +167,10 @@ class Window(RoundEdgesMixin, StyleEnabledWidget):
             self.view.setContentsMargins(10, 10, 10, 10)
             self.view.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
 
+        # >
+        # >
+        # >
+
         _build_title_bar()
         _build_menu_bar()
         _build_status_bar()
@@ -152,7 +179,6 @@ class Window(RoundEdgesMixin, StyleEnabledWidget):
         self.title_bar_hbox = QHBoxLayout()
         self.title_bar_hbox.addSpacing(self.BORDER_RADIUS)
         self.title_bar_hbox.addWidget(self.title_bar)
-        self.title_bar_hbox.addSpacing(self.BORDER_RADIUS // 3)
 
         self.status_bar_hbox = QHBoxLayout()
         self.status_bar_hbox.addSpacing(self.BORDER_RADIUS)
@@ -162,6 +188,7 @@ class Window(RoundEdgesMixin, StyleEnabledWidget):
         self.vbox = QVBoxLayout(self)
         self.vbox.setContentsMargins(0, 0, 0, 0)
         self.vbox.setSpacing(0)
+
         self.vbox.addLayout(self.title_bar_hbox)
         self.vbox.addWidget(self.menu_bar)
         self.vbox.addWidget(self.view)
@@ -170,5 +197,5 @@ class Window(RoundEdgesMixin, StyleEnabledWidget):
 
     # Callback handlers
 
-    def view__reset_window_size(self):
+    def menu__view__reset_window_size(self):
         self.resize(*self.dimensions)
