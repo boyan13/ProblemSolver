@@ -1,11 +1,19 @@
 # ----------------------------------------------------------------------------------------------------------------------
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QWidget, QPushButton
+from PyQt5.QtWidgets import QWidget, QPushButton, QStackedWidget
 # ----------------------------------------------------------------------------------------------------------------------
 
 
 class StyleEnabledWidget(QWidget):
+    def __init__(self, *args, object_name=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setAttribute(Qt.WA_StyledBackground)
+        if object_name is not None:
+            self.setObjectName(object_name)
+
+
+class StyleEnabledStackedWidget(QStackedWidget):
     def __init__(self, *args, object_name=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.setAttribute(Qt.WA_StyledBackground)

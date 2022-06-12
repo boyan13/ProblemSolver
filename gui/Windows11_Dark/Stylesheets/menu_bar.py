@@ -2,7 +2,7 @@ stylesheet = """
 
     Window QMenuBar {
         font-size: 16px;
-        background: #21201f;
+        background: #202020;
     }
     Window QMenuBar::item {
         color: white;

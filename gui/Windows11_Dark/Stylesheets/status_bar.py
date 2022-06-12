@@ -2,7 +2,7 @@ stylesheet = """
 
     Window QStatusBar {
         color: white;
-        background-color: #21201f;
+        background-color: #1f1f1f;
     }
 
 """

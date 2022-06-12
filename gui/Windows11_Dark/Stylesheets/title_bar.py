@@ -4,13 +4,13 @@ stylesheet = f"""
 
     Window TitleBar {{
         color: white;
-        background-color: #21201f;
+        background-color: #202020;
     }}
     
     /* ------------------------------------------------------------ */
     
     Window TitleBar MinimizeButton {{
-        background: #21201f;
+        background: #202020;
         color: white;
         
         border-style: solid;
@@ -25,7 +25,7 @@ stylesheet = f"""
     }}
 
     Window TitleBar FullscreenButton {{
-        background: #21201f;
+        background: #202020;
         color: white;
         
         border-style: solid;
@@ -40,7 +40,7 @@ stylesheet = f"""
     }}
     
     Window TitleBar CloseButton {{
-        background: #21201f;
+        background: #202020;
         color: white;
         
         border-style: solid;

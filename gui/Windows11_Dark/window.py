@@ -1,27 +1,29 @@
+
 # ----------------------------------------------------------------------------------------------------------------------
 import typing
+from typing import Union
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QSizePolicy, QVBoxLayout, QHBoxLayout, QSizeGrip
+from PyQt5.QtWidgets import QSizePolicy, QVBoxLayout, QHBoxLayout, QSizeGrip, QWidget
 
-import gui.Windows11_Dark.window
-from gui.Windows11_Dark.stylesheet import Windows11_Dark_stylesheet
-from gui.Windows11_Dark.Elements.title_bar_buttons import MinimizeButton, FullscreenButton, CloseButton
-from gui.Windows11_Dark.Components.widgets import StyleEnabledWidget, MaterialIconButton
-from gui.Windows11_Dark.Components.mixins import RoundEdgesMixin
 from gui.utilities import nulled_layout
-from gui.Windows11_Dark import constants as const
+from gui.Windows11_Dark.stylesheet import Windows11_Dark_stylesheet
+from gui.Windows11_Dark.Components.mixins import RoundEdgesMixin
+from gui.Windows11_Dark.Components.widgets import StyleEnabledWidget, MaterialIconButton, StyleEnabledStackedWidget
+from gui.Windows11_Dark.Elements.forms import MulticriterialAnalysisForm
+from gui.Windows11_Dark.Elements.title_bar_buttons import MinimizeButton, FullscreenButton, CloseButton
 # ----------------------------------------------------------------------------------------------------------------------
+
 
 class Window(RoundEdgesMixin, StyleEnabledWidget):
 
     BORDER_COLOR = '#606060'  # '#454545'
-    BACKGROUND_COLOR = '#21201f'
+    BACKGROUND_COLOR = '#202020'
     BORDER_WIDTH = 1
     BORDER_RADIUS = 11
-    TITLE_BAR_HEIGHT = 34
-    STATUS_BAR_HEIGHT = 26
+    TITLE_BAR_HEIGHT = 32
+    STATUS_BAR_HEIGHT = 30
 
     class TitleBar(StyleEnabledWidget):
 
@@ -93,8 +95,27 @@ class Window(RoundEdgesMixin, StyleEnabledWidget):
             if sizegrip is not None:
                 self.hbox.addLayout(sizegrip_vbox)
 
-    class View(StyleEnabledWidget):
-        pass
+    class View(StyleEnabledStackedWidget):
+
+        def __init__(self, parent=None):
+            super().__init__(parent)
+            self.setContentsMargins(10, 10, 10, 10)
+            self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+
+            self.views = {}
+
+        def keys(self):
+            return list(self.views.keys())
+
+        def add_view(self, key: str, view) -> int:
+            self.views[key] = view
+            return self.addWidget(view)
+
+        def set_view(self, how):
+            if type(how) is str:
+                self.setCurrentWidget(self.views[how])
+            else:
+                self.setCurrentIndex(self.indexOf(how))
 
     # ------------------------------------------------------------------------------------------------------------------
     #
@@ -104,21 +125,23 @@ class Window(RoundEdgesMixin, StyleEnabledWidget):
     #
     # ------------------------------------------------------------------------------------------------------------------
 
-    def __init__(self, parent=None, dimensions: typing.Tuple[int, int] = (600, 400)):
+    def __init__(self, parent=None, dimensions: typing.Tuple[int, int] = (700, 800)):
         super().__init__(parent)
 
         self.setStyleSheet(Windows11_Dark_stylesheet)
+        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
         self.setAttribute(Qt.WA_StyledBackground)
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
         self.dimensions = dimensions
         self.resize(*dimensions)
+
         self.setMinimumSize(300, 150)
         self.setContentsMargins(self.BORDER_WIDTH, self.BORDER_WIDTH, self.BORDER_WIDTH, self.BORDER_WIDTH)
+
         self.last_cursor_position = None
 
-        self._setup_view()
+        self._setup()
 
     # ------------------------------------------------------------------------------------------------------------------
     #
@@ -128,7 +151,7 @@ class Window(RoundEdgesMixin, StyleEnabledWidget):
     #
     # ------------------------------------------------------------------------------------------------------------------
 
-    def _setup_view(self):
+    def _setup(self):
 
         def _build_title_bar():
             self.title_bar = Window.TitleBar(self)
@@ -164,9 +187,8 @@ class Window(RoundEdgesMixin, StyleEnabledWidget):
 
         def _build_view():
             self.view = Window.View(parent=self)
-            self.view.setContentsMargins(10, 10, 10, 10)
-            self.view.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
-
+            self.view.add_view(key='ma_form', view=MulticriterialAnalysisForm(self))
+            self.view.set_view('ma_form')
         # >
         # >
         # >
@@ -195,7 +217,24 @@ class Window(RoundEdgesMixin, StyleEnabledWidget):
         self.vbox.addLayout(self.status_bar_hbox)
         self.vbox.addSpacing(self.BORDER_RADIUS // 3)
 
+    # ------------------------------------------------------------------------------------------------------------------
+    #
+    #
     # Callback handlers
+    #
+    #
+    # ------------------------------------------------------------------------------------------------------------------
 
     def menu__view__reset_window_size(self):
         self.resize(*self.dimensions)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    #
+    #
+    # Controls
+    #
+    #
+    # ------------------------------------------------------------------------------------------------------------------
+
+    def show_view(self, which: Union[str, QWidget]):
+        self.view.set_view(which)
