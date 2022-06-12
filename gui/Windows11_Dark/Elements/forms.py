@@ -21,8 +21,10 @@ E = FormFactory.ElementType  # shortcut for the enum
 
 
 def MulticriterialAnalysisForm(parent=None):
-    form = FormFactory(parent)
-    form.add(0, E.Label, text="Multicriterial Analysis")
-    form.add(0, E.LineEdit, label="Criteria: ")
-    form.add(1, E.ListView)
-    return form.get_form()
+    factory = FormFactory(parent)
+    factory.add(0, E.Label, name="criteria_heading", text="Multicriterial Analysis")
+    factory.add(0, E.LineEdit, name="criteria_input", label="Criteria: ", harvest=False)
+    factory.add(1, E.ListView, name="criteria_list")
+
+    form = factory.get_form()
+    return form

@@ -117,6 +117,9 @@ class Window(RoundEdgesMixin, StyleEnabledWidget):
             else:
                 self.setCurrentIndex(self.indexOf(how))
 
+        def harvest_view(self):
+            pass
+
     # ------------------------------------------------------------------------------------------------------------------
     #
     #
