@@ -3,15 +3,8 @@ import enum
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QLabel
-from PyQt5.QtWidgets import QSizePolicy
-from PyQt5.QtWidgets import QWidget
-from PyQt5.QtWidgets import QLineEdit
-from PyQt5.QtWidgets import QFormLayout
-from PyQt5.QtWidgets import QPushButton
-from PyQt5.QtWidgets import QListView
-from PyQt5.QtWidgets import QVBoxLayout
-from PyQt5.QtWidgets import QHBoxLayout
+from PyQt5.QtWidgets import QLabel, QSizePolicy, QWidget, QLineEdit, QFormLayout, QPushButton, QListView, QVBoxLayout,\
+    QHBoxLayout, QListWidgetItem
 
 from gui.Windows11_Dark.Factories.form_factory import FormFactory
 # +--------------------------------------------------------------------------------------------------------------------+
@@ -24,7 +17,17 @@ def MulticriterialAnalysisForm(parent=None):
     factory = FormFactory(parent)
     factory.add(0, E.Label, name="criteria_heading", text="Multicriterial Analysis")
     factory.add(0, E.LineEdit, name="criteria_input", label="Criteria: ", harvest=False)
-    factory.add(1, E.ListView, name="criteria_list")
+    factory.add(1, E.ListWidget, name="criteria_list", max_height=300)
+    factory.add(0, E.Button, name="TEST_BTN", text="TEST_BTN")
+    factory.add(1, E.Label, name="fake", text="")
 
     form = factory.get_form()
+
+    def add_criteria(form):
+        form.criteria_list.addItem(form.criteria_input.harvest())
+        form.criteria_input.setText("")
+
+    form.criteria_input.returnPressed.connect(lambda f=form: add_criteria(f))
+    form.TEST_BTN.pressed.connect(lambda: print(form.harvest()))
+
     return form

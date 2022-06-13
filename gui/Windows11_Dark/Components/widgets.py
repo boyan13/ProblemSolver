@@ -4,21 +4,21 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QWidget, QPushButton, QStackedWidget
 # ----------------------------------------------------------------------------------------------------------------------
 
-
-class StyleEnabledWidget(QWidget):
-    def __init__(self, *args, object_name=None, **kwargs):
-        super().__init__(*args, **kwargs)
+class StyleEnabledMixin:
+    """Enable styling for widgets. Expects QWidget as base class."""
+    def __init__(self, parent, object_name=None, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
         self.setAttribute(Qt.WA_StyledBackground)
         if object_name is not None:
             self.setObjectName(object_name)
 
 
-class StyleEnabledStackedWidget(QStackedWidget):
-    def __init__(self, *args, object_name=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.setAttribute(Qt.WA_StyledBackground)
-        if object_name is not None:
-            self.setObjectName(object_name)
+class StyledWidget(StyleEnabledMixin, QWidget):
+    pass
+
+
+class StyledStackedWidget(StyleEnabledMixin, QStackedWidget):
+    pass
 
 
 class MaterialIconButton(QPushButton):

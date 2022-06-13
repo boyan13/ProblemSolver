@@ -10,13 +10,13 @@ from PyQt5.QtWidgets import QSizePolicy, QVBoxLayout, QHBoxLayout, QSizeGrip, QW
 from gui.utilities import nulled_layout
 from gui.Windows11_Dark.stylesheet import Windows11_Dark_stylesheet
 from gui.Windows11_Dark.Components.mixins import RoundEdgesMixin
-from gui.Windows11_Dark.Components.widgets import StyleEnabledWidget, MaterialIconButton, StyleEnabledStackedWidget
+from gui.Windows11_Dark.Components.widgets import StyledWidget, MaterialIconButton, StyledStackedWidget
 from gui.Windows11_Dark.Elements.forms import MulticriterialAnalysisForm
 from gui.Windows11_Dark.Elements.title_bar_buttons import MinimizeButton, FullscreenButton, CloseButton
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-class Window(RoundEdgesMixin, StyleEnabledWidget):
+class Window(RoundEdgesMixin, StyledWidget):
 
     BORDER_COLOR = '#606060'  # '#454545'
     BACKGROUND_COLOR = '#202020'
@@ -25,7 +25,7 @@ class Window(RoundEdgesMixin, StyleEnabledWidget):
     TITLE_BAR_HEIGHT = 32
     STATUS_BAR_HEIGHT = 30
 
-    class TitleBar(StyleEnabledWidget):
+    class TitleBar(StyledWidget):
 
         class MinimizeButton(MaterialIconButton):
             ICON_CODE = '\ue931'
@@ -77,7 +77,7 @@ class Window(RoundEdgesMixin, StyleEnabledWidget):
             self.last_cursor_position = event.globalPos()
             super().mouseMoveEvent(event)
 
-    class StatusBar(StyleEnabledWidget):
+    class StatusBar(StyledWidget):
         def __init__(self, parent=None, sizegrip: QSizeGrip = None):
             super().__init__(parent)
             self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Maximum)
@@ -95,7 +95,7 @@ class Window(RoundEdgesMixin, StyleEnabledWidget):
             if sizegrip is not None:
                 self.hbox.addLayout(sizegrip_vbox)
 
-    class View(StyleEnabledStackedWidget):
+    class View(StyledStackedWidget):
 
         def __init__(self, parent=None):
             super().__init__(parent)
