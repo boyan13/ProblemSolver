@@ -1,2 +1,10 @@
 # ProblemSolver
-NBU CSCB803 Project
+
+---
+
+### New Bulgarian University
+### CSCB803 Final Project
+
+---
+
+
