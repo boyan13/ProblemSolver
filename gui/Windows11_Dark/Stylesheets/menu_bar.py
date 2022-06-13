@@ -1,5 +1,4 @@
 stylesheet = """
-
     Window QMenuBar {
         font-size: 16px;
         background: #202020;
@@ -34,5 +33,4 @@ stylesheet = """
     Window QMenuBar QMenu::item:pressed {
         background: #343434;
     }
-
 """

@@ -85,7 +85,11 @@ class FormRadioButton(QRadioButton):
 # | Non-Harvestable    |
 # +--------------------+
 
-class FormLabel(QLabel):
+class FormLabel(StyleEnabledMixin, QLabel):
+    pass
+
+
+class FormFakeLabel(QLabel):
     pass
 
 
@@ -104,6 +108,7 @@ class FormFactory:
         RadioGroup = 3
         ListWidget = 4
         Button = 5
+        FakeLabel = 6
 
 
     # +----------------------------------------------------------------------------------------------------------------+
@@ -121,7 +126,8 @@ class FormFactory:
             self.ElementType.LineEdit: self._create_line_edit,
             self.ElementType.RadioGroup: self._create_radio_group,
             self.ElementType.ListWidget: self._create_list_widget,
-            self.ElementType.Button: self._create_button
+            self.ElementType.Button: self._create_button,
+            self.ElementType.FakeLabel: self._create_fake_label
         }
 
         self.parent = parent
@@ -199,6 +205,10 @@ class FormFactory:
         element = FormButton(self.parent)
         if text is not None:
             element.setText(text)
+        return element
+
+    def _create_fake_label(self):
+        element = FormFakeLabel(self.parent)
         return element
 
     # +----------------------------------------------------------------------------------------------------------------+

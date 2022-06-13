@@ -1,13 +1,16 @@
 from gui.Windows11_Dark import constants as const
 
 stylesheet = f"""
-
     Window TitleBar {{
         color: white;
         background-color: #202020;
     }}
     
-    /* ------------------------------------------------------------ */
+    Window TitleBar QLabel {{
+        color: white;
+    }}
+    
+    /*   Buttons   */
     
     Window TitleBar MinimizeButton {{
         background: #202020;
@@ -57,5 +60,4 @@ stylesheet = f"""
     Window TitleBar QLabel {{
         font-size: 13px;
     }}
-
 """

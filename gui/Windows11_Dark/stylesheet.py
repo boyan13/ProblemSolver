@@ -1,4 +1,4 @@
-from gui.Windows11_Dark.Stylesheets import window, title_bar, menu_bar, status_bar, view
+from gui.Windows11_Dark.Stylesheets import window, title_bar, menu_bar, status_bar, view, forms
 
 extra_stylesheet = """
     Window {
@@ -15,4 +15,5 @@ Windows11_Dark_stylesheet = window.stylesheet + \
                             menu_bar.stylesheet + \
                             view.stylesheet + \
                             status_bar.stylesheet + \
+                            forms.stylesheet + \
                             extra_stylesheet

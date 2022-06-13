@@ -6,20 +6,23 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QLabel, QSizePolicy, QWidget, QLineEdit, QFormLayout, QPushButton, QListView, QVBoxLayout,\
     QHBoxLayout, QListWidgetItem
 
-from gui.Windows11_Dark.Factories.form_factory import FormFactory
+from gui.Windows11_Dark.Forms.form_factory import FormFactory
 # +--------------------------------------------------------------------------------------------------------------------+
 
 
 E = FormFactory.ElementType  # shortcut for the enum
 
+# +----------------------------------------+
+# | Multicriterial Analysis Forms          |
+# +----------------------------------------+
 
-def MulticriterialAnalysisForm(parent=None):
+def MA_CriteriaDataForm(parent=None):
     factory = FormFactory(parent)
     factory.add(0, E.Label, name="criteria_heading", text="Multicriterial Analysis")
     factory.add(0, E.LineEdit, name="criteria_input", label="Criteria: ", harvest=False)
     factory.add(1, E.ListWidget, name="criteria_list", max_height=300)
     factory.add(0, E.Button, name="TEST_BTN", text="TEST_BTN")
-    factory.add(1, E.Label, name="fake", text="")
+    factory.add(1, E.FakeLabel, name="fake")
 
     form = factory.get_form()
 

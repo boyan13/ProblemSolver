@@ -11,7 +11,7 @@ from gui.utilities import nulled_layout
 from gui.Windows11_Dark.stylesheet import Windows11_Dark_stylesheet
 from gui.Windows11_Dark.Components.mixins import RoundEdgesMixin
 from gui.Windows11_Dark.Components.widgets import StyledWidget, MaterialIconButton, StyledStackedWidget
-from gui.Windows11_Dark.Elements.forms import MulticriterialAnalysisForm
+from gui.Windows11_Dark.Forms.forms import MA_CriteriaDataForm
 from gui.Windows11_Dark.Elements.title_bar_buttons import MinimizeButton, FullscreenButton, CloseButton
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -190,7 +190,7 @@ class Window(RoundEdgesMixin, StyledWidget):
 
         def _build_view():
             self.view = Window.View(parent=self)
-            self.view.add_view(key='ma_form', view=MulticriterialAnalysisForm(self))
+            self.view.add_view(key='ma_form', view=MA_CriteriaDataForm(self))
             self.view.set_view('ma_form')
         # >
         # >
