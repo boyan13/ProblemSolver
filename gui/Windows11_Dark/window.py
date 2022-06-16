@@ -3,7 +3,7 @@
 import typing
 from typing import Union
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QSizePolicy, QVBoxLayout, QHBoxLayout, QSizeGrip, QWidget
 
@@ -11,19 +11,21 @@ from gui.utilities import nulled_layout
 from gui.Windows11_Dark.stylesheet import Windows11_Dark_stylesheet
 from gui.Windows11_Dark.Components.mixins import RoundEdgesMixin
 from gui.Windows11_Dark.Components.widgets import StyledWidget, MaterialIconButton, StyledStackedWidget
-from gui.Windows11_Dark.Forms.forms import MA_CriteriaDataForm
+from gui.Windows11_Dark.Forms.forms import MCDM_Form_Criteria
 from gui.Windows11_Dark.Elements.title_bar_buttons import MinimizeButton, FullscreenButton, CloseButton
+
+from gui.Windows11_Dark import constants as const
 # ----------------------------------------------------------------------------------------------------------------------
 
 
 class Window(RoundEdgesMixin, StyledWidget):
 
-    BORDER_COLOR = '#606060'  # '#454545'
-    BACKGROUND_COLOR = '#202020'
+    BORDER_COLOR = const.COLOR__WINDOW_OUTLINE
+    BACKGROUND_COLOR = const.COLOR__WINDOW_FILL
     BORDER_WIDTH = 1
-    BORDER_RADIUS = 11
-    TITLE_BAR_HEIGHT = 32
-    STATUS_BAR_HEIGHT = 30
+    BORDER_RADIUS = const.DIMENSION__WINDOW_BORDER_RADIUS
+    TITLE_BAR_HEIGHT = const.DIMENSION__TITLE_BAR_HEIGHT
+    STATUS_BAR_HEIGHT = const.DIMENSION__STATUS_BAR_HEIGHT
 
     class TitleBar(StyledWidget):
 
@@ -50,6 +52,8 @@ class Window(RoundEdgesMixin, StyledWidget):
             self.fullscreen_btn = FullscreenButton(self)
             self.close_btn = CloseButton(self)
 
+            self.buttons = [self.minimize_btn, self.fullscreen_btn, self.close_btn]
+
             self.minimize_btn.clicked.connect(parent.showMinimized)
             self.fullscreen_btn.clicked.connect(
                 lambda: parent.showNormal() if parent.isMaximized() else parent.showMaximized()
@@ -67,11 +71,25 @@ class Window(RoundEdgesMixin, StyledWidget):
             self.vbox.addLayout(self.hbox)
             self.vbox.addStretch(1)
 
+            self.last_cursor_position = None
+            # If this value is None, then mouseMoveEvent is invalid, and we do not attempt to move the widget.
+            # This is needed because if you start dragging from within a child widget like the Minimize Button,
+            # and continue onto the TitleBar itself, then the mousePressEvent would have been triggered for the child,
+            # and we would not have a valid last_cursor_position once we actually trigger the TitleBar's moveEvent.
+            # This way we only allow moveEvent if we have initially clicked onto the TitleBar, thus setting a valid
+            # cursor starting position.
+
         def mousePressEvent(self, event):
             self.last_cursor_position = event.globalPos()
             super().mousePressEvent(event)
 
+        def mouseReleaseEvent(self, a0: QtGui.QMouseEvent) -> None:
+            self.last_cursor_position = None
+
         def mouseMoveEvent(self, event):
+            if self.last_cursor_position is None:
+                return
+
             delta = QtCore.QPoint(event.globalPos() - self.last_cursor_position)
             self.parent().move(self.parent().x() + delta.x(), self.parent().y() + delta.y())
             self.last_cursor_position = event.globalPos()
@@ -190,7 +208,7 @@ class Window(RoundEdgesMixin, StyledWidget):
 
         def _build_view():
             self.view = Window.View(parent=self)
-            self.view.add_view(key='ma_form', view=MA_CriteriaDataForm(self))
+            self.view.add_view(key='ma_form', view=MCDM_Form_Criteria(self))
             self.view.set_view('ma_form')
         # >
         # >
@@ -241,3 +259,13 @@ class Window(RoundEdgesMixin, StyledWidget):
 
     def show_view(self, which: Union[str, QWidget]):
         self.view.set_view(which)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    #
+    #
+    # Events
+    #
+    #
+    # ------------------------------------------------------------------------------------------------------------------
+
+    # Nothing here yet

@@ -12,11 +12,8 @@ from gui.Windows11_Dark.Forms.form_factory import FormFactory
 
 E = FormFactory.ElementType  # shortcut for the enum
 
-# +----------------------------------------+
-# | Multicriterial Analysis Forms          |
-# +----------------------------------------+
 
-def MA_CriteriaDataForm(parent=None):
+def MCDM_Form_Criteria(parent=None):
     factory = FormFactory(parent)
     factory.add(0, E.Label, name="criteria_heading", text="Multicriterial Analysis")
     factory.add(0, E.LineEdit, name="criteria_input", label="Criteria: ", harvest=False)

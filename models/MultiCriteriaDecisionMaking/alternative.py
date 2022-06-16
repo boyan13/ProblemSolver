@@ -1,3 +1,3 @@
-class MA_Criteria:
+class Alternative:
     def __init__(self, name):
         self.__name = name

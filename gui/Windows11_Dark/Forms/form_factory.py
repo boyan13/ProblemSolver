@@ -1,5 +1,6 @@
 # ----------------------------------------------------------------------------------------------------------------------
 import enum
+import copy
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
@@ -8,6 +9,7 @@ from PyQt5.QtWidgets import QLabel, QSizePolicy, QWidget, QLineEdit, QFormLayout
     QListWidgetItem, QVBoxLayout, QHBoxLayout, QRadioButton, QButtonGroup
 
 from gui.Windows11_Dark.Components.widgets import StyledWidget, StyleEnabledMixin
+from gui import utilities
 # ----------------------------------------------------------------------------------------------------------------------
 
 class FormFactoryForm(StyledWidget):
@@ -134,10 +136,18 @@ class FormFactory:
         self.columns = columns
         self.column_forms = []
 
+        # We store the __attr__ strings of all form elements. We need this when we later construct the master form.
         self.attributes = []
+
+        # This determines which form elements will be added for harvesting to the master form's harvest method.
         self.to_harvest = []
 
-        self.hbox = QHBoxLayout()
+        self.vbox = utilities.nulled_layout(QVBoxLayout())
+        self.hbox = utilities.nulled_layout(QHBoxLayout())
+
+        self.vbox.addStretch(1)
+        self.vbox.addLayout(self.hbox)
+        self.vbox.addStretch(2)
 
         for i in range(self.columns):
             self.column_forms.append(FormFactoryForm(parent))
@@ -221,15 +231,25 @@ class FormFactory:
 
     def get_form(self):
         """Construct the final form and return it."""
-        entire_form = StyledWidget(self.parent)
 
+        # This will be the combination of all subforms into a master form.
+        master_form = StyledWidget(self.parent)
+
+        # Set all form elements as attributes of the master form
         for attr, value in self.attributes:
-            setattr(entire_form, attr, value)
-        setattr(entire_form, 'harvest', lambda self=entire_form, to_harvest=self.to_harvest: {k: getattr(self, k).harvest() for k in to_harvest})
+            setattr(master_form, attr, value)
+
+        # Set a copy of the to_harvest list on the master form. This allows you to later change which elements should be
+        # harvested if you want to, since the harvest() method created below uses this attribute to decide which
+        # elements to query for their data.
+        setattr(master_form, 'to_harvest', copy.deepcopy(self.to_harvest))
+
+        # Automatically construct a method that harvests the master form's elements and returns a data dict.
+        setattr(master_form, 'harvest', lambda self_=master_form: {k: getattr(self_, k).harvest() for k in self_.to_harvest})
 
         for form in self.column_forms:
             form.form_layout.setAlignment(Qt.AlignTop)
-            form.setParent(entire_form)
-        entire_form.setLayout(self.hbox)
+            form.setParent(master_form)
+        master_form.setLayout(self.vbox)
 
-        return entire_form
+        return master_form

@@ -1,36 +1,45 @@
-stylesheet = """
-    Window QMenuBar {
-        font-size: 16px;
-        background: #202020;
-    }
-    Window QMenuBar::item {
-        color: white;
+# ----------------------------------------------------------------------------------------------------------------------
+from gui.Windows11_Dark import constants as const
+# ----------------------------------------------------------------------------------------------------------------------
+
+
+stylesheet = f"""
+    Window QMenuBar {{
+        font-size: {const.FONT_SIZE__MENU_BAR_ITEM}px;
+        background: {const.COLOR__MENU_BAR};
+    }}
+    Window QMenuBar::item {{
+        color: {const.COLOR__MENU_BAR_ITEM_TEXT};
+        
         padding-left: 10px;
         padding-right: 10px;
         padding-top: 5px;
         padding-bottom: 5px;
-        border-radius: 6px;
+        
+        border-radius: {const.DIMENSION__MENU_BAR_BORDER_RADIUS}px;
+        
         margin-left: 4px;
         margin-right: 4px;
         margin-top: 4px;
         margin-bottom: 4px;
-    }
-    Window QMenuBar::item:selected {
-        background: #2e2d2b;
-    }
-    Window QMenuBar::item:pressed {
-        background: #2a2927;
-    }
-    Window QMenuBar QMenu {
-        color: white;
-        background: #2e2d2b;
-    }
-    Window QMenuBar QMenu::item {
-    }
-    Window QMenuBar QMenu::item:selected {
-        background: #383838;
-    }
-    Window QMenuBar QMenu::item:pressed {
-        background: #343434;
-    }
+    }}
+    /* selected means hover */
+    Window QMenuBar::item:selected {{
+        background: {const.COLOR__MENU_BAR_ITEM__HOVERED};
+    }}
+    Window QMenuBar::item:pressed {{
+        background: {const.COLOR__MENU_BAR_ITEM__PRESSED};
+    }}
+    Window QMenuBar QMenu {{
+        color: {const.COLOR__MENU_BAR_ITEM_TEXT};
+        background: {const.COLOR__SUBMENU};
+    }}
+    Window QMenuBar QMenu::item {{
+    }}
+    Window QMenuBar QMenu::item:selected {{
+        background: {const.COLOR__SUBMENU_ITEM__HOVERED};
+    }}
+    Window QMenuBar QMenu::item:pressed {{
+        background: {const.COLOR__SUBMENU_ITEM__PRESSED};
+    }}
 """
