@@ -5,63 +5,63 @@ from gui.Windows11_Dark import constants as const
 
 stylesheet = f"""
     Window TitleBar {{
-        background-color: {const.COLOR__TITLE_BAR};
-        color: {const.COLOR__TITLE_BAR_BUTTON_TEXT};
+        background-color: {const.COLOR__HARD};
+        color: {const.COLOR__TEXT};
     }}
     
     Window TitleBar QLabel {{
-        color: {const.COLOR__TITLE_BAR_TITLE_TEXT};
-        font-size: {const.FONT_SIZE__TITLE_BAR_TITLE}px;
+        color: {const.COLOR__TEXT};
+        font-size: {const.FONT_SIZE_PX__TITLE}px;
     }}
     
     /*   Buttons   */
     
     Window TitleBar MinimizeButton {{
-        background: {const.COLOR__TITLE_BAR_BUTTON};
-        color: {const.COLOR__TITLE_BAR_BUTTON_TEXT};
+        background: transparent;
+        color: {const.COLOR__TEXT_MUTED};
         
         border-style: solid;
         
-        min-width: {const.DIMENSION__TITLE_BAR_BUTTON_WIDTH}px;
-        max-width: {const.DIMENSION__TITLE_BAR_BUTTON_WIDTH}px;
-        min-height: {const.DIMENSION__TITLE_BAR_BUTTON_HEIGHT}px;
-        max-height: {const.DIMENSION__TITLE_BAR_BUTTON_HEIGHT}px;
+        min-width: {const.DIMENSION__WINDOW_BUTTONS_WIDTH}px;
+        max-width: {const.DIMENSION__WINDOW_BUTTONS_WIDTH}px;
+        min-height: {const.DIMENSION__WINDOW_BUTTONS_HEIGHT}px;
+        max-height: {const.DIMENSION__WINDOW_BUTTONS_HEIGHT}px;
     }}
     Window TitleBar MinimizeButton:hover {{
-        background: {const.COLOR__TITLE_BAR_BUTTON__HOVERED};
-        color: {const.COLOR__TITLE_BAR_BUTTON_TEXT__HOVERED};
+        background: {const.COLOR__HOVER__PRIMARY};
+        color: {const.COLOR__TEXT};
     }}
 
     Window TitleBar FullscreenButton {{
-        background: {const.COLOR__TITLE_BAR_BUTTON};
-        color: {const.COLOR__TITLE_BAR_BUTTON_TEXT};
+        background: transparent;
+        color: {const.COLOR__TEXT_MUTED};
         
         border-style: solid;
         
-        min-width: {const.DIMENSION__TITLE_BAR_BUTTON_WIDTH}px;
-        max-width: {const.DIMENSION__TITLE_BAR_BUTTON_WIDTH}px;
-        min-height: {const.DIMENSION__TITLE_BAR_BUTTON_HEIGHT}px;
-        max-height: {const.DIMENSION__TITLE_BAR_BUTTON_HEIGHT}px;
+        min-width: {const.DIMENSION__WINDOW_BUTTONS_WIDTH}px;
+        max-width: {const.DIMENSION__WINDOW_BUTTONS_WIDTH}px;
+        min-height: {const.DIMENSION__WINDOW_BUTTONS_HEIGHT}px;
+        max-height: {const.DIMENSION__WINDOW_BUTTONS_HEIGHT}px;
     }}
     Window TitleBar FullscreenButton:hover {{
-        background: {const.COLOR__TITLE_BAR_BUTTON__HOVERED};
-        color: {const.COLOR__TITLE_BAR_BUTTON_TEXT__HOVERED};
+        background: {const.COLOR__HOVER__PRIMARY};
+        color: {const.COLOR__TEXT};
     }}
     
     Window TitleBar CloseButton {{
-        background: {const.COLOR__TITLE_BAR_CLOSE_BUTTON};
-        color: {const.COLOR__TITLE_BAR_CLOSE_BUTTON_TEXT};
+        background: transparent;
+        color: {const.COLOR__TEXT_MUTED};
         
         border-style: solid;
         border-top-right-radius: 9px;
         
-        min-width: {const.DIMENSION__TITLE_BAR_CLOSE_BUTTON_WIDTH}px;
-        max-width: {const.DIMENSION__TITLE_BAR_CLOSE_BUTTON_WIDTH}px;
-        min-height: {const.DIMENSION__TITLE_BAR_CLOSE_BUTTON_HEIGHT}px;
-        max-height: {const.DIMENSION__TITLE_BAR_CLOSE_BUTTON_HEIGHT}px;
+        min-width: {const.DIMENSION__WINDOW_BUTTONS_WIDTH}px;
+        max-width: {const.DIMENSION__WINDOW_BUTTONS_WIDTH}px;
+        min-height: {const.DIMENSION__WINDOW_BUTTONS_HEIGHT}px;
+        max-height: {const.DIMENSION__WINDOW_BUTTONS_HEIGHT}px;
     }}
     Window TitleBar CloseButton:hover {{
-        background: {const.COLOR__TITLE_BAR_CLOSE_BUTTON__HOVERED};
-        color: {const.COLOR__TITLE_BAR_CLOSE_BUTTON_TEXT__HOVERED};
+        background: {const.COLOR__DANGER};
+        color: {const.COLOR__TEXT};
     }}
 """

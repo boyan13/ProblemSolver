@@ -2,18 +2,19 @@
 import enum
 import copy
 
-from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 
-from PyQt5.QtWidgets import QLabel, QSizePolicy, QWidget, QLineEdit, QFormLayout, QPushButton, QListWidget, \
-    QListWidgetItem, QVBoxLayout, QHBoxLayout, QRadioButton, QButtonGroup
+from PyQt5.QtWidgets import QLabel, QSizePolicy, QLineEdit, QFormLayout, QPushButton, QListWidget, \
+    QVBoxLayout, QHBoxLayout, QRadioButton, QButtonGroup
 
-from gui.Windows11_Dark.Components.widgets import StyledWidget, StyleEnabledMixin
-from gui import utilities
+from gui.Components.widgets import StyledWidget, StyleEnabledMixin
+from gui.Components import utilities
 # ----------------------------------------------------------------------------------------------------------------------
 
+
 class FormFactoryForm(StyledWidget):
-    """Subform used by Form Factory when building complex forms. Form elements must inherit and implement FormFactoryElementInterface"""
+    """Subform used by Form Factory when building complex forms. Form elements must inherit and implement
+    FormFactoryElementInterface"""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -29,19 +30,31 @@ class FormFactoryForm(StyledWidget):
             data[attr] = getattr(self, attr).harvest()
         return data
 
+
+class FormFactoryStretcher(StyledWidget):
+    """When the actual column forms are expanded to the maximum, we want this stretcher to start taking up any
+    additional horizontal spacing. This has a purely visual purpose."""
+    pass
+
+
 # +--------------------+
 # | Harvestable        |
 # +--------------------+
+
 
 class FormFactoryElementInterface:
 
     def harvest(self):
         """Harvest the elements's data."""
-
         # Form's data harvest will fail if you do not implement this.
         raise NotImplementedError()
 
+
 class FormLineEdit(FormFactoryElementInterface, QLineEdit):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.Maximum)
 
     def harvest(self):
         return self.text()
@@ -55,6 +68,10 @@ class FormRadioGroup(FormFactoryElementInterface, QButtonGroup):
 
 class FormListWidget(FormFactoryElementInterface, QListWidget):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
     def harvest(self):
         return [self.item(i).text() for i in range(self.count())]
 
@@ -67,6 +84,7 @@ class FormListWidget(FormFactoryElementInterface, QListWidget):
                 self.takeItem(row)
 
         super().keyPressEvent(event)
+
 
 class FormRadioButton(QRadioButton):
     pass
@@ -83,26 +101,46 @@ class FormRadioButton(QRadioButton):
 #                 items.add(item)
 #         return items
 
+
 # +--------------------+
 # | Non-Harvestable    |
 # +--------------------+
 
+
 class FormLabel(StyleEnabledMixin, QLabel):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
 
 
 class FormFakeLabel(QLabel):
     pass
 
 
-class FormButton(QPushButton):
-    pass
+class FormButton(StyleEnabledMixin, QPushButton):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Maximum)
+
 
 # +--------------------+
 # | Factory            |
 # +--------------------+
 
+
 class FormFactory:
+
+    """Builds complex forms through a simple API. The number of columns passed to the __init__ is the number of
+    subforms that make up the entire form. Each subform takes up a column and all subforms (or just forms) are placed
+    in a row next to each other. When populating them you just have to specify the target column (form) and the row.
+    The ElementType enum provides an API for the types of elements that can be added to the form. The get_form() will
+    return a single widget that combines all forms, and its harvest() method will collect the data of all form elements
+    that are harvestable and return a dict with field names (or attribute names) as keys. By default, all form elements
+    that contain data are harvestable, but you may specify some that should not be included in the harvest. Since you
+    specify all element attribute names, you can directly access form elements using those names and connect signals
+    and slots on the returned form to configure additional logic."""
+
+    FIELD_LABEL_OBJ_NAME = "FormFieldLabel"
 
     class ElementType(enum.Enum):
         Label = 1
@@ -111,7 +149,6 @@ class FormFactory:
         ListWidget = 4
         Button = 5
         FakeLabel = 6
-
 
     # +----------------------------------------------------------------------------------------------------------------+
     #
@@ -166,6 +203,8 @@ class FormFactory:
 
         if label is not None:
             form.form_layout.addRow(label, form_element)
+            the_label = form.form_layout.itemAt(form.form_layout.rowCount() - 1).widget()
+            the_label.setObjectName(self.FIELD_LABEL_OBJ_NAME)
         else:
             form.form_layout.addRow(form_element)
 
@@ -233,7 +272,7 @@ class FormFactory:
         """Construct the final form and return it."""
 
         # This will be the combination of all subforms into a master form.
-        master_form = StyledWidget(self.parent)
+        master_form = StyledWidget(self.parent, object_name="Form")
 
         # Set all form elements as attributes of the master form
         for attr, value in self.attributes:

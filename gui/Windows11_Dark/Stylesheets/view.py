@@ -3,9 +3,9 @@ from gui.Windows11_Dark import constants as const
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-stylesheet = """
-    Window View {
-        color: white;
-        background-color: #272727;
-    }
+stylesheet = f"""
+    Window View {{
+        background-color: {const.COLOR__SOFT};
+        background-color: {const.COLOR__HARD};
+    }}
 """

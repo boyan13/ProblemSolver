@@ -7,11 +7,11 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QSizePolicy, QVBoxLayout, QHBoxLayout, QSizeGrip, QWidget
 
-from gui.utilities import nulled_layout
+from gui.Components.utilities import nulled_layout
 from gui.Windows11_Dark.stylesheet import Windows11_Dark_stylesheet
-from gui.Windows11_Dark.Components.mixins import RoundEdgesMixin
-from gui.Windows11_Dark.Components.widgets import StyledWidget, MaterialIconButton, StyledStackedWidget
-from gui.Windows11_Dark.Forms.forms import MCDM_Form_Criteria
+from gui.Components.mixins import RoundEdgesMixin
+from gui.Components.widgets import StyledWidget, MaterialIconButton, StyledStackedWidget
+from gui.Forms.forms import MCDM_Form_Criteria
 from gui.Windows11_Dark.Elements.title_bar_buttons import MinimizeButton, FullscreenButton, CloseButton
 
 from gui.Windows11_Dark import constants as const
@@ -21,7 +21,7 @@ from gui.Windows11_Dark import constants as const
 class Window(RoundEdgesMixin, StyledWidget):
 
     BORDER_COLOR = const.COLOR__WINDOW_OUTLINE
-    BACKGROUND_COLOR = const.COLOR__WINDOW_FILL
+    BACKGROUND_COLOR = const.COLOR__HARD
     BORDER_WIDTH = 1
     BORDER_RADIUS = const.DIMENSION__WINDOW_BORDER_RADIUS
     TITLE_BAR_HEIGHT = const.DIMENSION__TITLE_BAR_HEIGHT
