@@ -14,108 +14,176 @@ from gui.Windows11_Dark import constants as const
 # font-size: {const.FONT_SIZE_PX__TEXT}px;
 # font-family: "{const.FONT_FAMILY}";
 
-stylesheet = f"""
+stylesheet_buttons = f"""
+    FormButton {{
+        background-color: {const.COLOR__FORM_BUTTON__DEFAULT};
+        color: {const.COLOR__FORM_BUTTON_TEXT__DEFAULT};
+
+        font-weight: {const.FONT_WEIGHT__FORM__PRIMARY};
+        font-style: {const.FONT_STYLE};
+        font-size: {const.FONT_SIZE_PX__TEXT}px;
+        font-family: "{const.FONT_FAMILY}";    
+    
+        border-style: solid;
+        border-width: 1px;
+        border-color: {const.COLOR__FORM_BUTTON_BORDER__DEFAULT};
+        border-radius: {const.DIMENSION__BUTTONS_BORDER_RADIUS};
+        
+        padding-left: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
+        padding-right: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
+        padding-top: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
+        padding-bottom: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
+        
+        min-width: {const.DIMENSION__FORM_INPUT_MIN_WIDTH};
+        max-width: {const.DIMENSION__FORM_INPUT_MAX_WIDTH};
+    }}
+    FormButton::hover {{
+        background-color: {const.COLOR__FORM_BUTTON__HOVERED};
+        color: {const.COLOR__FORM_BUTTON_TEXT__HOVERED};
+        border-color: {const.COLOR__FORM_BUTTON_BORDER__HOVERED};
+    }}
+    FormButton::pressed {{
+        background-color: {const.COLOR__FORM_BUTTON__PRESSED};
+        color: {const.COLOR__FORM_BUTTON_TEXT__PRESSED};
+        border-color: {const.COLOR__FORM_BUTTON_BORDER__PRESSED};
+    }}
+    
+    FormRadioButton {{
+        background-color: transparent;
+        color: {const.COLOR__FORM_FIELD_TEXT__DEFAULT};
+        
+        font-weight: {const.FONT_WEIGHT__FORM__PRIMARY};
+        font-style: {const.FONT_STYLE};
+        font-size: {const.FONT_SIZE_PX__TEXT}px;
+        font-family: "{const.FONT_FAMILY}";    
+        
+        padding-left: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
+        padding-right: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
+        padding-top: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
+        padding-bottom: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
+    }}
+    
+    FormRadioGroupBox {{
+        background-color: {const.COLOR__FORM_FIELD__DEFAULT};
+        color: {const.COLOR__FORM_FIELD_TEXT__DEFAULT};
+        
+        font-weight: {const.FONT_WEIGHT__FORM__PRIMARY};
+        font-style: {const.FONT_STYLE};
+        font-size: {const.FONT_SIZE_PX__TEXT}px;
+        font-family: "{const.FONT_FAMILY}";    
+        
+        border-style: solid;
+        border-width: 1px;
+        border-color: {const.COLOR__FORM_FIELD_BORDERS__DEFAULT};
+        border-radius: {const.DIMENSION__BUTTONS_BORDER_RADIUS};
+        
+        padding-left: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
+        padding-right: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
+        padding-top: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
+        padding-bottom: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
+        
+        min-width: {const.DIMENSION__FORM_INPUT_MIN_WIDTH};
+        max-width: {const.DIMENSION__FORM_INPUT_MAX_WIDTH};
+    }}
+"""
+
+stylesheet_fields = f"""
+    FormLineEdit {{
+        background-color: {const.COLOR__FORM_FIELD__DEFAULT};
+        color: {const.COLOR__FORM_FIELD_TEXT__DEFAULT};
+        
+        font-weight: {const.FONT_WEIGHT__FORM__PRIMARY};
+        font-style: {const.FONT_STYLE};
+        font-size: {const.FONT_SIZE_PX__TEXT}px;
+        font-family: "{const.FONT_FAMILY}";    
+        
+        border-style: solid;
+        border-width: 1px;
+        border-color: {const.COLOR__FORM_FIELD_BORDERS__DEFAULT};
+        border-radius: {const.DIMENSION__BUTTONS_BORDER_RADIUS};    
+        border-bottom-width: 2px;
+        border-bottom-color: {const.COLOR__FORM_FIELD_ACCENT__DEFAULT};
+        
+        padding-left: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
+        padding-right: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
+        padding-top: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
+        padding-bottom: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
+        
+        min-width: {const.DIMENSION__FORM_INPUT_MIN_WIDTH};
+        max-width: {const.DIMENSION__FORM_INPUT_MAX_WIDTH};
+    }}
+    FormLineEdit::hover {{
+        background-color: {const.COLOR__FORM_FIELD__HOVERED};
+        color: {const.COLOR__FORM_FIELD_TEXT__HOVERED};
+        border-color: {const.COLOR__FORM_FIELD_BORDERS__HOVERED};
+        border-bottom-color: {const.COLOR__FORM_FIELD_ACCENT__HOVERED};
+    }}
+    FormLineEdit::focus {{
+        background-color: {const.COLOR__FORM_FIELD__FOCUSED};
+        color: {const.COLOR__FORM_FIELD_TEXT__FOCUSED};
+        border-color: {const.COLOR__FORM_FIELD_BORDERS__FOCUSED};
+        border-bottom-color: {const.COLOR__FORM_FIELD_ACCENT__FOCUSED};
+    }}
+    FormLineEdit QString {{
+        color: green;
+    }}
+
+    FormListWidget {{
+        background-color: {const.COLOR__FORM_FIELD__DEFAULT};
+        color: {const.COLOR__FORM_FIELD_TEXT__DEFAULT};
+        
+        font-weight: {const.FONT_WEIGHT__FORM__PRIMARY};
+        font-style: {const.FONT_STYLE};
+        font-size: {const.FONT_SIZE_PX__TEXT}px;
+        font-family: "{const.FONT_FAMILY}";    
+        
+        border-style: solid;
+        border-width: 1px;
+        border-color: {const.COLOR__FORM_FIELD_BORDERS__DEFAULT};
+        border-radius: {const.DIMENSION__BUTTONS_BORDER_RADIUS};
+        
+        padding-left: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
+        padding-right: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
+        padding-top: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
+        padding-bottom: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
+        
+        min-width: {const.DIMENSION__LIST_MIN_WIDTH};
+        max-width: {const.DIMENSION__LIST_MAX_WIDTH};
+    }}
+"""
+
+stylesheet_labels = f"""
     #FormFieldLabel {{
         background-color: transparent;
         color: {const.COLOR__TEXT};
         
-        font-weight: {const.FONT_WEIGHT};
+        font-weight: {const.FONT_WEIGHT__FORM__PRIMARY};
         font-style: {const.FONT_STYLE};
         font-size: {const.FONT_SIZE_PX__TEXT}px;
         font-family: "{const.FONT_FAMILY}";   
         
-        padding-left: {const.DIMENSION__BUTTON_PADDING_HORIZONTAL}px;
-        padding-right: {const.DIMENSION__BUTTON_PADDING_HORIZONTAL}px;
-        padding-top: {const.DIMENSION__BUTTON_PADDING_VERTICAL}px;
-        padding-bottom: {const.DIMENSION__BUTTON_PADDING_VERTICAL}px;
+        padding-left: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
+        padding-right: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
+        padding-top: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
+        padding-bottom: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
     }}
     
     FormLabel {{
         background-color: transparent;
         color: {const.COLOR__TEXT};
 
-        font-weight: {const.FONT_WEIGHT};
+        font-weight: {const.FONT_WEIGHT__FORM__PRIMARY};
         font-style: {const.FONT_STYLE};
         font-size: {const.FONT_SIZE_PX__TEXT_BIG}px;
         font-family: "{const.FONT_FAMILY}";    
         
-        padding-left: {const.DIMENSION__BUTTON_PADDING_HORIZONTAL}px;
-        padding-right: {const.DIMENSION__BUTTON_PADDING_HORIZONTAL}px;
-        padding-top: {const.DIMENSION__BUTTON_PADDING_VERTICAL}px;
-        padding-bottom: {const.DIMENSION__BUTTON_PADDING_VERTICAL}px;
-    }}
-    
-    FormButton {{
-        background-color: {const.COLOR__SOFTEST};
-        color: {const.COLOR__TEXT};
-
-        font-weight: {const.FONT_WEIGHT};
-        font-style: {const.FONT_STYLE};
-        font-size: {const.FONT_SIZE_PX__TEXT}px;
-        font-family: "{const.FONT_FAMILY}";    
-    
-        border-style: solid;
-        border-width: 1px;
-        border-color: {const.COLOR__FIELD_BORDERS_IDLE};
-        border-radius: {const.DIMENSION__BUTTONS_BORDER_RADIUS};
-        
-        padding-left: {const.DIMENSION__BUTTON_PADDING_HORIZONTAL}px;
-        padding-right: {const.DIMENSION__BUTTON_PADDING_HORIZONTAL}px;
-        padding-top: {const.DIMENSION__BUTTON_PADDING_VERTICAL}px;
-        padding-bottom: {const.DIMENSION__BUTTON_PADDING_VERTICAL}px;
-        
-        padding-left: {const.DIMENSION__BUTTON_PADDING_HORIZONTAL}px;
-        padding-right: {const.DIMENSION__BUTTON_PADDING_HORIZONTAL}px;
-        padding-top: {const.DIMENSION__BUTTON_PADDING_VERTICAL}px;
-        padding-bottom: {const.DIMENSION__BUTTON_PADDING_VERTICAL}px;
-        
-        min-width: {const.DIMENSION__BUTTON_MIN_WIDTH};
-        max-width: {const.DIMENSION__BUTTON_MAX_WIDTH};
-    }}
-    
-    FormLineEdit {{
-        background-color: {const.COLOR__FIELD_IDLE};
-        color: {const.COLOR__TEXT};
-        
-        font-weight: {const.FONT_WEIGHT};
-        font-style: {const.FONT_STYLE};
-        font-size: {const.FONT_SIZE_PX__TEXT}px;
-        font-family: "{const.FONT_FAMILY}";    
-        
-        border-style: solid;
-        border-width: 1px;
-        border-color: {const.COLOR__FIELD_BORDERS_IDLE};
-        border-radius: {const.DIMENSION__BUTTONS_BORDER_RADIUS};    
-        
-        padding-left: {const.DIMENSION__BUTTON_PADDING_HORIZONTAL}px;
-        padding-right: {const.DIMENSION__BUTTON_PADDING_HORIZONTAL}px;
-        padding-top: {const.DIMENSION__BUTTON_PADDING_VERTICAL}px;
-        padding-bottom: {const.DIMENSION__BUTTON_PADDING_VERTICAL}px;
-        
-        min-width: {const.DIMENSION__LINE_EDIT_MIN_WIDTH};
-        max-width: {const.DIMENSION__LINE_EDIT_MAX_WIDTH};
-    }}
-    
-    FormListWidget {{
-        background-color: {const.COLOR__FIELD_IDLE};
-        color: {const.COLOR__TEXT};
-        
-        font-weight: {const.FONT_WEIGHT};
-        font-style: {const.FONT_STYLE};
-        font-size: {const.FONT_SIZE_PX__TEXT}px;
-        font-family: "{const.FONT_FAMILY}";    
-        
-        border-style: solid;
-        border-width: 1px;
-        border-color: {const.COLOR__FIELD_BORDERS_IDLE};
-        border-radius: {const.DIMENSION__BUTTONS_BORDER_RADIUS};
-        
-        padding-left: {const.DIMENSION__BUTTON_PADDING_HORIZONTAL}px;
-        padding-right: {const.DIMENSION__BUTTON_PADDING_HORIZONTAL}px;
-        padding-top: {const.DIMENSION__BUTTON_PADDING_VERTICAL}px;
-        padding-bottom: {const.DIMENSION__BUTTON_PADDING_VERTICAL}px;
-        
-        min-width: {const.DIMENSION__LIST_MIN_WIDTH};
-        max-width: {const.DIMENSION__LIST_MAX_WIDTH};
+        padding-left: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
+        padding-right: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
+        padding-top: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
+        padding-bottom: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
     }}
 """
+
+stylesheet = stylesheet_buttons +\
+             stylesheet_fields +\
+             stylesheet_labels

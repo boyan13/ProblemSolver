@@ -1,56 +1,150 @@
 # ----------------------------------------------------------------------------------------------------------------------
 import enum
 import copy
+import typing
+from functools import cached_property
+from types import SimpleNamespace
 
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
-
 from PyQt5.QtWidgets import QLabel, QSizePolicy, QLineEdit, QFormLayout, QPushButton, QListWidget, \
-    QVBoxLayout, QHBoxLayout, QRadioButton, QButtonGroup
+    QListWidgetItem, QVBoxLayout, QHBoxLayout, QRadioButton, QButtonGroup, QGroupBox
 
 from gui.Components.widgets import StyledWidget, StyleEnabledMixin
 from gui.Components import utilities
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-class FormFactoryForm(StyledWidget):
-    """Subform used by Form Factory when building complex forms. Form elements must inherit and implement
-    FormFactoryElementInterface"""
+class FormColumn(StyledWidget):
+
+    OBJECT_NAME_OF_FIELD_LABELS = 'FormFieldLabel'
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
         self.form_layout = QFormLayout(self)
+        self.form_layout.setSpacing(15)
+
         self.to_harvest = []
+        self.attributes = []
+
+    def add_row(self, element, attribute_name_of_element: str, label: str = None, harvest=True):
+        setattr(self, attribute_name_of_element, element)
+        self.attributes.append(attribute_name_of_element)
+
+        if harvest and element.harvestable:
+            self.to_harvest.append(attribute_name_of_element)
+
+        if label is not None:
+            self.form_layout.addRow(label, element)
+            the_label = self.form_layout.labelForField(element)
+            the_label.setObjectName(self.OBJECT_NAME_OF_FIELD_LABELS)
+        else:
+            self.form_layout.addRow(element)
+        a = 10
 
     def harvest(self):
-        """Harvest the form's data. Recursively call harvest() on its elements and store the results in a dict."""
-
-        data = {}
-        for attr in self.to_harvest:
-            data[attr] = getattr(self, attr).harvest()
-        return data
+        return {k: getattr(self, k).harvest() for k in self.to_harvest}
 
 
-class FormFactoryStretcher(StyledWidget):
-    """When the actual column forms are expanded to the maximum, we want this stretcher to start taking up any
-    additional horizontal spacing. This has a purely visual purpose."""
-    pass
+class FormRow(StyledWidget):
+
+    @property
+    def to_harvest(self):
+        to_harvest = []
+        for form in self.columns:
+            to_harvest += form.to_harvest
+        return to_harvest
+
+    @property
+    def attributes(self):
+        attributes = []
+        for form in self.columns:
+            attributes += form.attributes
+        return attributes
+
+    def __init__(self, parent=None, form_columns: typing.List[FormColumn] = None):
+        super().__init__(parent)
+        self.columns = form_columns
+
+        self.hbox = utilities.nulled_layout(QHBoxLayout(self))
+        for form in form_columns:
+            form.setParent(self)
+            form.form_layout.setAlignment(Qt.AlignTop)
+            self.hbox.addWidget(form)
+
+    def harvest(self):
+        return {k: getattr(self, k).harvest() for k in self.to_harvest}
+
+    def __getattr__(self, item):
+        for form in self.columns:
+            if item in form.attributes:
+                return getattr(form, item)
+
+
+class MasterForm(StyledWidget):
+
+    @property
+    def to_harvest(self):
+        to_harvest = []
+        for form in self.rows:
+            to_harvest += form.to_harvest
+        return to_harvest
+
+    @property
+    def attributes(self):
+        attributes = []
+        for form in self.columns:
+            attributes += form.attributes
+        return attributes
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.rows = []
+
+        self.vbox = utilities.nulled_layout(QVBoxLayout(self))
+        self.vbox.addStretch(1)
+        self.vbox.addStretch(2)
+
+    def __getattr__(self, item):
+        for form in self.rows:
+            if item in form.attributes:
+                return getattr(form, item)
+
+    def add_form_row(self, form_row):
+        form_row.setParent(self)
+        self.rows.append(form_row)
+        self.vbox.removeItem(self.vbox.itemAt(self.vbox.count()))
+        self.vbox.addWidget(form_row)
+        self.vbox.addStretch(2)
+
+    def harvest(self):
+        return {k: getattr(self, k).harvest() for k in self.to_harvest}
+
+
+class FormElementMixin:
+
+    _HARVESTABLE = True
+
+    @cached_property
+    def harvestable(self):
+        """Whether this element contains data."""
+        return self._HARVESTABLE
+
+    def harvest(self):
+        """Get the value (or values) of this element."""
+        raise ValueError("This element does not hold harvestable data.")
 
 
 # +--------------------+
-# | Harvestable        |
+# | Elements           |
 # +--------------------+
 
 
-class FormFactoryElementInterface:
+class FormLineEdit(FormElementMixin, QLineEdit):
 
-    def harvest(self):
-        """Harvest the elements's data."""
-        # Form's data harvest will fail if you do not implement this.
-        raise NotImplementedError()
-
-
-class FormLineEdit(FormFactoryElementInterface, QLineEdit):
+    _HARVESTABLE = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -60,20 +154,41 @@ class FormLineEdit(FormFactoryElementInterface, QLineEdit):
         return self.text()
 
 
-class FormRadioGroup(FormFactoryElementInterface, QButtonGroup):
+class FormRadioGroupBox(FormElementMixin, QGroupBox):
+
+    _HARVESTABLE = True
+
+    def __init__(self, options, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.group = QButtonGroup()
+        self.vbox = QVBoxLayout(self)
+
+        for option in options:
+            btn = FormRadioButton(self)
+            btn.setText(option)
+            self.group.addButton(btn)
+            self.vbox.addWidget(btn)
 
     def harvest(self):
-        return self.checkedButton().text()
+        try:
+            text = self.group.checkedButton().text()
+        except Exception:
+            return None
+        else:
+            return text
 
 
-class FormListWidget(FormFactoryElementInterface, QListWidget):
+class FormListWidget(FormElementMixin, QListWidget):
+
+    _HARVESTABLE = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
     def harvest(self):
-        return [self.item(i).text() for i in range(self.count())]
+        return [self.item(i) for i in range(self.count())]
 
     def keyPressEvent(self, event):
 
@@ -86,8 +201,23 @@ class FormListWidget(FormFactoryElementInterface, QListWidget):
         super().keyPressEvent(event)
 
 
-class FormRadioButton(QRadioButton):
-    pass
+class FormListWidgetItem(FormElementMixin, QListWidgetItem):
+    def __init__(self, text, **kwargs):
+        super().__init__(text, type=1000)
+
+        # This is probably not the best approach, but it's quick and easy to work with for now.
+        self.data = SimpleNamespace()
+        self.data.text = text
+        for k, v in kwargs.items():
+            setattr(self.data, k, v)
+
+    def __repr__(self):
+        return self.data.text
+
+
+class FormRadioButton(FormElementMixin, QRadioButton):
+
+    _HARVESTABLE = False
 
 
 # class FormListView(QListView):
@@ -102,22 +232,24 @@ class FormRadioButton(QRadioButton):
 #         return items
 
 
-# +--------------------+
-# | Non-Harvestable    |
-# +--------------------+
+class FormLabel(FormElementMixin, StyleEnabledMixin, QLabel):
 
+    _HARVESTABLE = False
 
-class FormLabel(StyleEnabledMixin, QLabel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Maximum)
 
 
-class FormFakeLabel(QLabel):
-    pass
+class FormFakeLabel(FormElementMixin, QLabel):
+
+    _HARVESTABLE = False
 
 
-class FormButton(StyleEnabledMixin, QPushButton):
+class FormButton(FormElementMixin, StyleEnabledMixin, QPushButton):
+
+    _HARVESTABLE = False
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Maximum)
@@ -171,45 +303,25 @@ class FormFactory:
 
         self.parent = parent
         self.columns = columns
+
         self.column_forms = []
-
-        # We store the __attr__ strings of all form elements. We need this when we later construct the master form.
         self.attributes = []
-
-        # This determines which form elements will be added for harvesting to the master form's harvest method.
         self.to_harvest = []
 
-        self.vbox = utilities.nulled_layout(QVBoxLayout())
-        self.hbox = utilities.nulled_layout(QHBoxLayout())
-
-        self.vbox.addStretch(1)
-        self.vbox.addLayout(self.hbox)
-        self.vbox.addStretch(2)
-
         for i in range(self.columns):
-            self.column_forms.append(FormFactoryForm(parent))
-            self.hbox.addWidget(self.column_forms[i])
+            self.column_forms.append(FormColumn(parent))
 
-    def add(self, column: int, element: ElementType, name, label: str = None, harvest=True, **kwargs):
+    def add(self, column: int, element_type: ElementType, name: str, label: str = None, harvest=True, **kwargs):
+
         if 0 > column or column > self.columns:
             raise ValueError("Column must be between 0 and {}".format(self.columns))
 
+        if name in self.attributes:
+            raise ValueError("Element name already used.")
+
         form = self.column_forms[column]
-        form_element = self.create_element(element, **kwargs)
-
-        self.attributes.append((name, form_element))
-        if not isinstance(form_element, FormFactoryElementInterface):
-            harvest = False
-
-        if label is not None:
-            form.form_layout.addRow(label, form_element)
-            the_label = form.form_layout.itemAt(form.form_layout.rowCount() - 1).widget()
-            the_label.setObjectName(self.FIELD_LABEL_OBJ_NAME)
-        else:
-            form.form_layout.addRow(form_element)
-
-        if harvest:
-            self.to_harvest.append(name)
+        elem = self.create_element(element_type, **kwargs)
+        form.add_row(elem, name, label, harvest)
 
     # +----------------------------------------------------------------------------------------------------------------+
     #
@@ -223,8 +335,6 @@ class FormFactory:
         return self.construction_map[element](**kwargs)
 
     # >
-    # >
-    # >
 
     def _create_label(self, text: str = None):
         element = FormLabel(self.parent)
@@ -236,12 +346,10 @@ class FormFactory:
         element = FormLineEdit(self.parent)
         return element
 
-    def _create_radio_group(self, buttons_texts: list):
-        element = QButtonGroup(self.parent)
-        for text in buttons_texts:
-            button = FormRadioButton(self.parent)
-            button.setText(text)
-            element.addButton(button)
+    def _create_radio_group(self, options: list, default: int = None):
+        element = FormRadioGroupBox(parent=self.parent, options=options)
+        if default is not None:
+            element.group.buttons()[default].setChecked(True)
         return element
 
     def _create_list_widget(self, max_height=None):
@@ -270,25 +378,7 @@ class FormFactory:
 
     def get_form(self):
         """Construct the final form and return it."""
-
-        # This will be the combination of all subforms into a master form.
-        master_form = StyledWidget(self.parent, object_name="Form")
-
-        # Set all form elements as attributes of the master form
-        for attr, value in self.attributes:
-            setattr(master_form, attr, value)
-
-        # Set a copy of the to_harvest list on the master form. This allows you to later change which elements should be
-        # harvested if you want to, since the harvest() method created below uses this attribute to decide which
-        # elements to query for their data.
-        setattr(master_form, 'to_harvest', copy.deepcopy(self.to_harvest))
-
-        # Automatically construct a method that harvests the master form's elements and returns a data dict.
-        setattr(master_form, 'harvest', lambda self_=master_form: {k: getattr(self_, k).harvest() for k in self_.to_harvest})
-
-        for form in self.column_forms:
-            form.form_layout.setAlignment(Qt.AlignTop)
-            form.setParent(master_form)
-        master_form.setLayout(self.vbox)
-
+        form_row = FormRow(None, self.column_forms)
+        master_form = MasterForm(self.parent)
+        master_form.add_form_row(form_row)
         return master_form

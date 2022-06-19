@@ -11,7 +11,7 @@ from gui.Components.utilities import nulled_layout
 from gui.Windows11_Dark.stylesheet import Windows11_Dark_stylesheet
 from gui.Components.mixins import RoundEdgesMixin
 from gui.Components.widgets import StyledWidget, MaterialIconButton, StyledStackedWidget
-from gui.Forms.forms import MCDM_Form_Criteria
+from gui.Forms import forms
 from gui.Windows11_Dark.Elements.title_bar_buttons import MinimizeButton, FullscreenButton, CloseButton
 
 from gui.Windows11_Dark import constants as const
@@ -208,10 +208,13 @@ class Window(RoundEdgesMixin, StyledWidget):
 
         def _build_view():
             self.view = Window.View(parent=self)
-            self.view.add_view(key='ma_form', view=MCDM_Form_Criteria(self))
+
+            form1 = forms.MCDMForm_Criteria(self)
+            form1.add_form_row(forms.MCDMForm_Alternatives())
+
+            self.view.add_view(key='ma_form', view=form1)
             self.view.set_view('ma_form')
-        # >
-        # >
+
         # >
 
         _build_title_bar()
