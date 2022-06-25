@@ -1,11 +1,7 @@
 # ----------------------------------------------------------------------------------------------------------------------
-from gui.Windows11_Dark import constants as const
+from enum import Enum
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-stylesheet = f"""
-    #WindowView {{
-        background-color: {const.COLOR__SOFT};
-        background-color: {const.COLOR__HARD};
-    }}
-"""
+class AppStyle(Enum):
+    Windows11_Dark = 1

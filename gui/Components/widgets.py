@@ -4,6 +4,7 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QWidget, QPushButton, QStackedWidget
 # ----------------------------------------------------------------------------------------------------------------------
 
+
 class StyleEnabledMixin:
     """Enable styling for widgets. Expects QWidget as base class."""
     def __init__(self, parent, object_name=None, *args, **kwargs):

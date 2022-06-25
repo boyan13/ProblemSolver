@@ -14,6 +14,43 @@ from gui.Windows11_Dark import constants as const
 # font-size: {const.FONT_SIZE_PX__TEXT}px;
 # font-family: "{const.FONT_FAMILY}";
 
+form_title_offset = const.FONT_SIZE_PX__TEXT_BIG // 2 + const.DIMENSION__FORM_ELEMENT_PADDING_VERTICAL * 2
+
+stylesheet_formgroup = f"""
+    FormGroup {{
+        border-style: solid;
+        border-width: 2px;
+        border-color: {const.COLOR__FORM_BUTTON_BORDER__DEFAULT};
+        border-radius: {const.DIMENSION__BUTTONS_BORDER_RADIUS};   
+        
+        margin-top: {form_title_offset}px;
+        padding-top: {const.FONT_SIZE_PX__TEXT_BIG // 2}px;
+
+        font-weight: {const.FONT_WEIGHT__FORM__PRIMARY};
+        font-style: {const.FONT_STYLE};
+        font-size: {const.FONT_SIZE_PX__TEXT_BIG}px;
+        font-family: "{const.FONT_FAMILY}";    
+    }}
+
+    FormGroup::title {{
+        background-color: {const.COLOR__HARD};
+        color: {const.COLOR__TEXT};
+
+        font-weight: {const.FONT_WEIGHT__FORM__PRIMARY};
+        font-style: {const.FONT_STYLE};
+        font-size: {const.FONT_SIZE_PX__TEXT_BIG}px;
+        font-family: "{const.FONT_FAMILY}";
+        
+        top: {-form_title_offset}px;
+        left: 10px;
+        
+        padding-left: {const.DIMENSION__FORM_ELEMENT_PADDING_HORIZONTAL}px;
+        padding-right: {const.DIMENSION__FORM_ELEMENT_PADDING_HORIZONTAL}px;
+        padding-top: {const.DIMENSION__FORM_ELEMENT_PADDING_VERTICAL}px;
+        padding-bottom: {const.DIMENSION__FORM_ELEMENT_PADDING_VERTICAL}px;
+    }}
+"""
+
 stylesheet_buttons = f"""
     FormButton {{
         background-color: {const.COLOR__FORM_BUTTON__DEFAULT};
@@ -29,13 +66,13 @@ stylesheet_buttons = f"""
         border-color: {const.COLOR__FORM_BUTTON_BORDER__DEFAULT};
         border-radius: {const.DIMENSION__BUTTONS_BORDER_RADIUS};
         
-        padding-left: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
-        padding-right: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
-        padding-top: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
-        padding-bottom: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
+        padding-left: {const.DIMENSION__FORM_ELEMENT_PADDING_HORIZONTAL}px;
+        padding-right: {const.DIMENSION__FORM_ELEMENT_PADDING_HORIZONTAL}px;
+        padding-top: {const.DIMENSION__FORM_ELEMENT_PADDING_VERTICAL}px;
+        padding-bottom: {const.DIMENSION__FORM_ELEMENT_PADDING_VERTICAL}px;
         
-        min-width: {const.DIMENSION__FORM_INPUT_MIN_WIDTH};
-        max-width: {const.DIMENSION__FORM_INPUT_MAX_WIDTH};
+        min-width: {const.DIMENSION__FORM_INPUT_WIDGET_MIN_WIDTH};
+        max-width: {const.DIMENSION__FORM_INPUT_WIDGET_MAX_WIDTH};
     }}
     FormButton::hover {{
         background-color: {const.COLOR__FORM_BUTTON__HOVERED};
@@ -57,10 +94,10 @@ stylesheet_buttons = f"""
         font-size: {const.FONT_SIZE_PX__TEXT}px;
         font-family: "{const.FONT_FAMILY}";    
         
-        padding-left: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
-        padding-right: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
-        padding-top: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
-        padding-bottom: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
+        padding-left: {const.DIMENSION__FORM_ELEMENT_PADDING_HORIZONTAL}px;
+        padding-right: {const.DIMENSION__FORM_ELEMENT_PADDING_HORIZONTAL}px;
+        padding-top: {const.DIMENSION__FORM_ELEMENT_PADDING_VERTICAL}px;
+        padding-bottom: {const.DIMENSION__FORM_ELEMENT_PADDING_VERTICAL}px;
     }}
     
     FormRadioGroupBox {{
@@ -77,17 +114,17 @@ stylesheet_buttons = f"""
         border-color: {const.COLOR__FORM_FIELD_BORDERS__DEFAULT};
         border-radius: {const.DIMENSION__BUTTONS_BORDER_RADIUS};
         
-        padding-left: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
-        padding-right: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
-        padding-top: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
-        padding-bottom: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
+        padding-left: {const.DIMENSION__FORM_ELEMENT_PADDING_HORIZONTAL}px;
+        padding-right: {const.DIMENSION__FORM_ELEMENT_PADDING_HORIZONTAL}px;
+        padding-top: {const.DIMENSION__FORM_ELEMENT_PADDING_VERTICAL}px;
+        padding-bottom: {const.DIMENSION__FORM_ELEMENT_PADDING_VERTICAL}px;
         
-        min-width: {const.DIMENSION__FORM_INPUT_MIN_WIDTH};
-        max-width: {const.DIMENSION__FORM_INPUT_MAX_WIDTH};
+        min-width: {const.DIMENSION__FORM_INPUT_WIDGET_MIN_WIDTH};
+        max-width: {const.DIMENSION__FORM_INPUT_WIDGET_MAX_WIDTH};
     }}
 """
 
-stylesheet_fields = f"""
+stylesheet_lineedits = f"""
     FormLineEdit {{
         background-color: {const.COLOR__FORM_FIELD__DEFAULT};
         color: {const.COLOR__FORM_FIELD_TEXT__DEFAULT};
@@ -104,13 +141,13 @@ stylesheet_fields = f"""
         border-bottom-width: 2px;
         border-bottom-color: {const.COLOR__FORM_FIELD_ACCENT__DEFAULT};
         
-        padding-left: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
-        padding-right: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
-        padding-top: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
-        padding-bottom: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
+        padding-left: {const.DIMENSION__FORM_ELEMENT_PADDING_HORIZONTAL}px;
+        padding-right: {const.DIMENSION__FORM_ELEMENT_PADDING_HORIZONTAL}px;
+        padding-top: {const.DIMENSION__FORM_ELEMENT_PADDING_VERTICAL}px;
+        padding-bottom: {const.DIMENSION__FORM_ELEMENT_PADDING_VERTICAL}px;
         
-        min-width: {const.DIMENSION__FORM_INPUT_MIN_WIDTH};
-        max-width: {const.DIMENSION__FORM_INPUT_MAX_WIDTH};
+        min-width: {const.DIMENSION__FORM_INPUT_WIDGET_MIN_WIDTH};
+        max-width: {const.DIMENSION__FORM_INPUT_WIDGET_MAX_WIDTH};
     }}
     FormLineEdit::hover {{
         background-color: {const.COLOR__FORM_FIELD__HOVERED};
@@ -126,8 +163,10 @@ stylesheet_fields = f"""
     }}
     FormLineEdit QString {{
         color: green;
-    }}
+    }} 
+"""
 
+stylesheet_lists = f"""
     FormListWidget {{
         background-color: {const.COLOR__FORM_FIELD__DEFAULT};
         color: {const.COLOR__FORM_FIELD_TEXT__DEFAULT};
@@ -142,18 +181,20 @@ stylesheet_fields = f"""
         border-color: {const.COLOR__FORM_FIELD_BORDERS__DEFAULT};
         border-radius: {const.DIMENSION__BUTTONS_BORDER_RADIUS};
         
-        padding-left: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
-        padding-right: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
-        padding-top: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
-        padding-bottom: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
+        padding-left: {const.DIMENSION__FORM_ELEMENT_PADDING_HORIZONTAL}px;
+        padding-right: {const.DIMENSION__FORM_ELEMENT_PADDING_HORIZONTAL}px;
+        padding-top: {const.DIMENSION__FORM_ELEMENT_PADDING_VERTICAL}px;
+        padding-bottom: {const.DIMENSION__FORM_ELEMENT_PADDING_VERTICAL}px;
         
-        min-width: {const.DIMENSION__LIST_MIN_WIDTH};
-        max-width: {const.DIMENSION__LIST_MAX_WIDTH};
+        min-width: {const.DIMENSION__FORM_DISPLAY_WIDGET_MIN_WIDTH};
+        max-width: {const.DIMENSION__FORM_DISPLAY_WIDGET_MAX_WIDTH};
+        max-height: 9999px;
     }}
 """
 
 stylesheet_labels = f"""
-    #FormFieldLabel {{
+    
+    #FormLabel {{
         background-color: transparent;
         color: {const.COLOR__TEXT};
         
@@ -162,28 +203,15 @@ stylesheet_labels = f"""
         font-size: {const.FONT_SIZE_PX__TEXT}px;
         font-family: "{const.FONT_FAMILY}";   
         
-        padding-left: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
-        padding-right: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
-        padding-top: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
-        padding-bottom: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
-    }}
-    
-    FormLabel {{
-        background-color: transparent;
-        color: {const.COLOR__TEXT};
-
-        font-weight: {const.FONT_WEIGHT__FORM__PRIMARY};
-        font-style: {const.FONT_STYLE};
-        font-size: {const.FONT_SIZE_PX__TEXT_BIG}px;
-        font-family: "{const.FONT_FAMILY}";    
-        
-        padding-left: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
-        padding-right: {const.DIMENSION__FORM_PADDING_HORIZONTAL}px;
-        padding-top: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
-        padding-bottom: {const.DIMENSION__FORM_PADDING_VERTICAL}px;
+        padding-left: {const.DIMENSION__FORM_ELEMENT_PADDING_HORIZONTAL}px;
+        padding-right: {const.DIMENSION__FORM_ELEMENT_PADDING_HORIZONTAL}px;
+        padding-top: {const.DIMENSION__FORM_ELEMENT_PADDING_VERTICAL}px;
+        padding-bottom: {const.DIMENSION__FORM_ELEMENT_PADDING_VERTICAL}px;
     }}
 """
 
-stylesheet = stylesheet_buttons +\
-             stylesheet_fields +\
+stylesheet = stylesheet_formgroup + \
+             stylesheet_buttons + \
+             stylesheet_lineedits + \
+             stylesheet_lists + \
              stylesheet_labels

@@ -1,8 +1,13 @@
 # +--------------------------------------------------------------------------------------------------------------------+
+import typing
+from typing import Union, List, Tuple
 from types import SimpleNamespace
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget, QListWidget, QListWidgetItem
-from gui.Forms.form_factory import FormFactory, FormListWidgetItem
+from gui.Forms.form_factory import FormFactory
+from gui.Forms.form_factory_elements import FormListWidgetItem
+from gui.Forms.form_factory_forms import FormMatrix
 # +--------------------------------------------------------------------------------------------------------------------+
 
 
@@ -11,25 +16,50 @@ E = FormFactory.ElementType  # shortcut for the enum
 
 def MCDMForm_Criteria(parent=None):
     factory = FormFactory(parent)
-    factory.add(0, E.Label, name='title', text='Criteria')
-    factory.add(0, E.LineEdit, name='input_name', label='Criteria: ', harvest=False)
+
+    input_form = factory.init(0, 0, "Criteria", limit_height=False)
+    list_form = factory.init(0, 1, "Criteria set")
+
     factory.add(
-        0, E.RadioGroup, name='input_type', label='Criteria Type', harvest=False,
-        options=('Quantitative', 'Qualitative'), default=0
+        input_form,
+        E.LineEdit,
+        attr='input_name',
+        label='Criteria: ',
+        harvest=False
     )
     factory.add(
-        0, E.RadioGroup, name='input_goal', label='Min / Max', harvest=False,
-        options=('Minimize', 'Maximize'), default=0
+        input_form,
+        E.RadioGroup,
+        attr='input_type',
+        label='Criteria type:',
+        harvest=False,
+        options=('Quantitative', 'Qualitative'),
+        default=0
     )
-    factory.add(0, E.Button, name='TEST_BTN', text='TEST_BTN')
+    factory.add(
+        input_form,
+        E.RadioGroup,
+        attr='input_goal',
+        label='Min / Max:',
+        harvest=False,
+        options=('Minimize', 'Maximize'),
+        default=0
+    )
+    factory.add(
+        input_form,
+        E.Button,
+        attr='TEST_BTN',
+        label=" ",
+        text='TEST_BTN'
+    )
+    factory.add(
+        list_form,
+        E.ListWidget,
+        attr='criteria_list',
+        max_height=300
+    )
 
-    factory.add(1, E.Label, name='criteria_list_title', text='Criteria set')
-    factory.add(1, E.ListWidget, name='criteria_list', max_height=300)
-    factory.add(1, E.FakeLabel, name='fake')
-
-    form = factory.get_form()
-
-    form.input_name.setPlaceholderText('Add criteria')
+    form = factory.get()
 
     def add_criteria(form):
         text = form.input_name.harvest()
@@ -43,25 +73,42 @@ def MCDMForm_Criteria(parent=None):
             form.criteria_list.addItem(item)
         form.input_name.setText("")
 
+    form.input_name.setPlaceholderText('Add criteria')
     form.input_name.returnPressed.connect(lambda f=form: add_criteria(f))
     form.TEST_BTN.pressed.connect(lambda: print(form.harvest()))
 
     return form
 
 
-def MCDMForm_Alternatives(parent=None):
+def MCDMForm_Alternatives(parent=None) -> FormMatrix:
     factory = FormFactory(parent)
-    factory.add(0, E.Label, name='title', text='Alternatives')
-    factory.add(0, E.LineEdit, name='input_name', label='Alternative: ', harvest=False)
-    factory.add(0, E.Button, name='TEST_BTN', text='TEST_BTN')
 
-    factory.add(1, E.Label, name='alternatives_list_title', text='Alternatives set')
-    factory.add(1, E.ListWidget, name='alternatives_list', max_height=300)
-    factory.add(1, E.FakeLabel, name='fake')
+    input_form = factory.init(0, 0, "Alternatives", limit_height=False)
+    list_form = factory.init(0, 1, "Alternatives set")
 
-    form = factory.get_form()
+    factory.add(
+        input_form,
+        E.LineEdit,
+        attr='input_name',
+        label='Alternative: ',
+        harvest=False
+    )
+    factory.add(
+        input_form,
+        E.Button,
+        attr='TEST_BTN',
+        label=" ",
+        text='TEST_BTN'
+    )
 
-    form.input_name.setPlaceholderText('Add alternative')
+    factory.add(
+        list_form,
+        E.ListWidget,
+        attr='alternatives_list',
+        max_height=300
+    )
+
+    form = factory.get()
 
     def add_alternative(form):
         text = form.input_name.harvest()
@@ -69,8 +116,67 @@ def MCDMForm_Alternatives(parent=None):
             item = FormListWidgetItem(text)
             form.alternatives_list.addItem(item)
         form.input_name.setText("")
-
+    
+    form.input_name.setPlaceholderText('Add alternative')
     form.input_name.returnPressed.connect(lambda f=form: add_alternative(f))
     form.TEST_BTN.pressed.connect(lambda: print(form.harvest()))
 
+    return form
+
+
+def TEST(parent=None) -> FormMatrix:
+
+    factory = FormFactory(parent)
+    form1 = factory.init(0, 0, "Critera")
+    form2 = factory.init(0, 1, "Alternatives")
+
+    factory.add(
+        form1,
+        E.LineEdit,
+        attr='input_name',
+        label='Criteria: ',
+        harvest=False
+    )
+    factory.add(
+        form1,
+        E.RadioGroup,
+        attr='input_type',
+        label='Criteria type:',
+        harvest=False,
+        options=('Quantitative', 'Qualitative'),
+        default=0
+    )
+    factory.add(
+        form1,
+        E.RadioGroup,
+        attr='input_goal',
+        label='Min / Max:',
+        harvest=False,
+        options=('Minimize', 'Maximize'),
+        default=0
+    )
+    factory.add(
+        form1,
+        E.Button,
+        attr='TEST_BTN',
+        label=" ",
+        text='TEST_BTN'
+    )
+
+    factory.add(
+        form2,
+        E.LineEdit,
+        attr='input_name',
+        label='Alternative: ',
+        harvest=False
+    )
+    factory.add(
+        form2,
+        E.Button,
+        attr='TEST_BTN',
+        label=" ",
+        text='TEST_BTN'
+    )
+
+    form = factory.get()
     return form

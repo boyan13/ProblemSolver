@@ -4,11 +4,11 @@ from gui.Windows11_Dark import constants as const
 
 
 stylesheet = f"""
-    Window QMenuBar {{
+    #WindowMenuBar {{
         font-size: {const.FONT_SIZE_PX__MENU_ITEM}px;
         background: {const.COLOR__HARD};
     }}
-    Window QMenuBar::item {{
+    #WindowMenuBar::item {{
         color: {const.COLOR__TEXT};
         
         padding-left: {const.DIMENSION__MENU_BUTTON_PADDING_HORIZONTAL}px;
@@ -23,23 +23,25 @@ stylesheet = f"""
         margin-top: 4px;
         margin-bottom: 4px;
     }}
+    
     /* selected means hover */
-    Window QMenuBar::item:selected {{
+    
+    #WindowMenuBar::item:selected {{
         background: {const.COLOR__HOVER__PRIMARY};
     }}
-    Window QMenuBar::item:pressed {{
+    #WindowMenuBar::item:pressed {{
         background: {const.COLOR__PRESSED_PRIMARY};
     }}
-    Window QMenuBar QMenu {{
+    #WindowMenuBar QMenu {{
         color: {const.COLOR__TEXT};
         background: {const.COLOR__SOFTEST};
     }}
-    Window QMenuBar QMenu::item {{
+    #WindowMenuBar QMenu::item {{
     }}
-    Window QMenuBar QMenu::item:selected {{
+    #WindowMenuBar QMenu::item:selected {{
         background: {const.COLOR__HOVER__SECONDARY};
     }}
-    Window QMenuBar QMenu::item:pressed {{
+    #WindowMenuBar QMenu::item:pressed {{
         background: {const.COLOR__PRESSED_SECONDARY};
     }}
 """

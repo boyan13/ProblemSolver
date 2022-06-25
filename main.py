@@ -77,22 +77,31 @@
 
 # ----------------------------------------------------------------------------------------------------------------------
 import sys
+
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtWidgets import QApplication
-from gui.Windows11_Dark import window
+
+import gui
+from gui.style import AppStyle
+from gui import Windows11_Dark
+
+from app import configuration
+from gui.Windows11_Dark.window import StylizedBaseWindow as BaseWindow__Windows11_Dark
 # ----------------------------------------------------------------------------------------------------------------------
 
 
-class DemoWidget(QtWidgets.QWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setFixedSize(600, 300)
-
-
 if __name__ == '__main__':
+    app_style = AppStyle.Windows11_Dark
+
+    if app_style is AppStyle.Windows11_Dark:
+        configuration.set_base_window_class(BaseWindow__Windows11_Dark)
+    else:
+        raise ValueError("Invalid app style.")
+
     application = QApplication(sys.argv)
     QtCore.QDir('resources')
     QtGui.QFontDatabase.addApplicationFont('resources/MaterialIcons-Regular.ttf')
-    app = window.Window()
-    app.show()
+    from app.window import Window
+    window = Window()
+    window.show()
     sys.exit(application.exec_())
