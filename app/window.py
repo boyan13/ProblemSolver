@@ -9,9 +9,7 @@ from app.configuration import STYLIZED_WINDOW
 
 
 def CombinedForm__Criteria__Alternatives():
-    combined_form = MCDMForm_Criteria()
-    combined_form.append_below(MCDMForm_Alternatives())
-    return combined_form
+    return FormMatrix.combine(MCDMForm_Criteria(), MCDMForm_Alternatives())
 
 
 class Window(STYLIZED_WINDOW, BaseWindow, StyledWidget):

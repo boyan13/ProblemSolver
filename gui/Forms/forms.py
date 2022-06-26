@@ -69,13 +69,16 @@ def MCDMForm_Criteria(parent=None):
             if criteria_type is None or criteria_goal is None:
                 return
             item = FormListWidgetItem(text, type=criteria_type, goal=criteria_goal)
-            item.setText(text + f" ({criteria_type})")
+            item.setText(text + f" ({criteria_type}) ({criteria_goal})")
             form.criteria_list.addItem(item)
         form.input_name.setText("")
 
+    def test_harvest(form):
+        print(form.harvest())
+
     form.input_name.setPlaceholderText('Add criteria')
     form.input_name.returnPressed.connect(lambda f=form: add_criteria(f))
-    form.TEST_BTN.pressed.connect(lambda: print(form.harvest()))
+    form.TEST_BTN.pressed.connect(lambda f=form: test_harvest(f))
 
     return form
 
@@ -116,10 +119,13 @@ def MCDMForm_Alternatives(parent=None) -> FormMatrix:
             item = FormListWidgetItem(text)
             form.alternatives_list.addItem(item)
         form.input_name.setText("")
-    
+
+    def test_harvest(form):
+        print(form.harvest())
+
     form.input_name.setPlaceholderText('Add alternative')
     form.input_name.returnPressed.connect(lambda f=form: add_alternative(f))
-    form.TEST_BTN.pressed.connect(lambda: print(form.harvest()))
+    form.TEST_BTN.pressed.connect(lambda f=form: test_harvest(f))
 
     return form
 

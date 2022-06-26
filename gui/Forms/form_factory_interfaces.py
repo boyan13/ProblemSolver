@@ -35,14 +35,14 @@ class FormManagerMixin:
     @property
     def to_harvest(self):
         to_harvest = []
-        for form in self.subforms.values():
+        for form in self.subforms:
             to_harvest += form.to_harvest
         return to_harvest
 
     @property
     def attributes(self):
         attributes = []
-        for form in self.subforms.values():
+        for form in self.subforms:
             attributes += form.attributes
         return attributes
 

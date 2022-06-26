@@ -138,6 +138,29 @@ class FormGroup(FormMixin, QGroupBox):
 
 class FormMatrix(FormManagerMixin, StyledWidget):
 
+    @classmethod
+    def combine(cls, form1, form2, direction: str = 'below'):
+
+        combined = cls()
+
+        if direction == 'below':
+            rows = {}
+            first_form = False
+
+            for form in [form1, form2]:
+                first_form = not first_form
+                for subform in form.subforms:
+                    row, col, row_span, col_span = form.grid.getItemPosition(form.grid.indexOf(subform))
+                    if not first_form:
+                        if row not in rows:
+                            rows[row] = combined.grid.rowCount() + row
+                        row = rows[row]
+                    combined.add_form(row, col, form)
+        else:
+            raise ValueError("Invalid direction")
+
+        return combined
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
@@ -150,25 +173,4 @@ class FormMatrix(FormManagerMixin, StyledWidget):
         self.subforms.append(form)
         return self.grid.indexOf(form)
 
-    def append_form(self, form_matrix: "FormMatrix", direction: str):
-        if direction == 'below':
-            self.append_below(form_matrix)
-        elif direction == 'above':
-            raise NotImplemented()
-        elif direction == 'left':
-            raise NotImplemented()
-        elif direction == 'right':
-            raise NotImplemented()
 
-    def append_below(self, form_matrix: "FormMatrix"):
-
-        rows = {}
-
-        for form in form_matrix.subforms:
-            row, col, row_span, col_span = form_matrix.grid.getItemPosition(form_matrix.grid.indexOf(form))
-
-            if row not in rows:
-                rows[row] = self.grid.rowCount() + row
-            row = rows[row]
-
-            self.add_form(row, col, form)
