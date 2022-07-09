@@ -11,7 +11,7 @@ from PyQt5.QtWidgets import QLineEdit, QGroupBox, QButtonGroup, QVBoxLayout, QLi
 # Internal
 from GUI.Components.widgets import StyleEnabledMixin
 from GUI.Forms.mixins import *
-from GUI.Utilities import pyqt_utilities as u
+from GUI.Utilities import pyqt_utilities as pyqt_utils
 # +====================================================================================================================+
 
 
@@ -107,7 +107,7 @@ class ColumnRadioGroup(FormBoxHarvestableElementMixin, StyleEnabledMixin, QGroup
     def __init__(self, texts, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.group = QButtonGroup()
-        self.vbox = u.null_layout(QVBoxLayout(self))
+        self.vbox = pyqt_utils.null_layout(QVBoxLayout(self))
         for text in texts:
             b = RadioButton(parent=self)
             b.setText(text)
@@ -128,7 +128,7 @@ class GridRadioGroup(FormBoxHarvestableElementMixin, StyleEnabledMixin, QGroupBo
         super().__init__(*args, **kwargs)
         self.group = QButtonGroup()
 
-        self.grid = u.null_layout(QVBoxLayout(self))
+        self.grid = pyqt_utils.null_layout(QVBoxLayout(self))
         self.__i = 0
         self.__j = 0
 

@@ -3,6 +3,7 @@
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QFormLayout, QSizePolicy
 
 # Internal
+from GUI.Utilities import pyqt_utilities as pyqt_utils
 from GUI.Forms.elements import *
 # +====================================================================================================================+
 
@@ -137,12 +138,12 @@ class CriteriaFormBoxes:
             lay.addRow("Criteria name:", box1.criteria_name)
             lay.addRow("Type:", box1.criteria_type)
 
-            hbox = u.null_layout(QHBoxLayout())
+            hbox = pyqt_utils.null_layout(QHBoxLayout())
             hbox.addWidget(box1.criteria_add)
             hbox.addSpacing(10)
             hbox.addWidget(box1.criteria_del)
 
-            vbox = u.null_layout(QVBoxLayout())
+            vbox = pyqt_utils.null_layout(QVBoxLayout())
             vbox.addWidget(box1.criteria_goal)
             vbox.addSpacing(10)
             vbox.addLayout(hbox)
@@ -254,12 +255,12 @@ class AlternativesFormBoxes:
 
             lay.setSpacing(10)
 
-            hbox = u.null_layout(QHBoxLayout())
+            hbox = pyqt_utils.null_layout(QHBoxLayout())
             hbox.addWidget(box1.alternative_add)
             hbox.addSpacing(10)
             hbox.addWidget(box1.alternative_del)
 
-            vbox = u.null_layout(QVBoxLayout())
+            vbox = pyqt_utils.null_layout(QVBoxLayout())
             vbox.addWidget(box1.alternative_name)
             vbox.addSpacing(10)
             vbox.addLayout(hbox)
