@@ -1,3 +1,13 @@
+import platform
+
+which_os = platform.system()
+is_win11 = False
+if which_os == 'Windows':
+    os_info = platform.uname()
+    version_info = os_info.version.split('.')
+    if int(version_info[-1]) >= 22000:
+        is_win11 = True
+
 #
 #
 #
@@ -28,7 +38,8 @@ COLOR__PRESSED_SECONDARY = "#343434"
 # Default Font
 FONT_STYLE = "normal"
 FONT_WEIGHT = "normal"
-FONT_FAMILY = "Segoe UI Variable"
+
+FONT_FAMILY = "Segoe UI Variable" if is_win11 else "Segoe UI"  # else Qt will default to system font I think?
 
 # Forms_OLD
 FONT_WEIGHT__FORM__PRIMARY = "bold"
