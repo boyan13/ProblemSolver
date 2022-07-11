@@ -10,7 +10,7 @@ class DataType(Enum):
     @classmethod
     def from_string(cls, value: str):
         for e in cls:
-            if e.value == value:
+            if e.name == value:
                 return e
 
     Quantitative = 1
@@ -22,11 +22,23 @@ class DataGoal(Enum):
     @classmethod
     def from_string(cls, value: str):
         for e in cls:
-            if e.value == value:
+            if e.name == value:
                 return e
 
     Minimize = 1
     Maximize = 2
+
+
+class QualitativeValue(Enum):
+    ExceptionallyBad = 1
+    ExtremelyBad = 2
+    VeryBad = 3
+    Bad = 4
+    Neutral = 5
+    Good = 6
+    VeryGood = 7
+    ExtremelyGood = 8
+    ExceptionallyGood = 9
 
 
 class Important(Enum):
@@ -74,4 +86,4 @@ class Important(Enum):
     @classmethod
     def range(cls):
         values = [e.value for e in cls]
-        return range(min(values), max(values))
+        return range(min(values), max(values) + 1)

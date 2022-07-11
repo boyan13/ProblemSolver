@@ -19,6 +19,9 @@ class Criteria:
         return self.__goal
 
     def __init__(self, name: str, data_type: DataType, goal: DataGoal):
+        if type(data_type) is not DataType or type(goal) is not DataGoal:
+            raise TypeError()
+
         self.__name = name
         self.__data_type = data_type
         self.__goal = goal

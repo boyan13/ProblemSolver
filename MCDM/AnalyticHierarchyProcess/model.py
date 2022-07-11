@@ -1,380 +1,841 @@
 # +====================================================================================================================+
 # Pythonic
+import math
+import typing
+from types import SimpleNamespace
 from itertools import combinations
 from functools import cached_property
+from operator import itemgetter
+from collections import OrderedDict
 
 # Libs
 import pandas as pd
 
 # Internal
 from MCDM.AnalyticHierarchyProcess.enums import *
-from MCDM.AnalyticHierarchyProcess.criteria import AHPCriteria
+from MCDM.AnalyticHierarchyProcess.criteria import Criteria
+from MCDM.AnalyticHierarchyProcess.alternative import Alternative
 from GUI.Utilities import pandas_utilities as pandas_utils
 from GUI.Utilities import python_utilities as py_utils
 # +====================================================================================================================+
+
+
+class DataModel:
+    def __init__(self, goal: str = ""):
+
+        self.goal = goal
+        self.criteria = OrderedDict()
+        self.alternatives = OrderedDict()
+        self.alternatives_values = {}
+
+    def get_minimum_pairs(self, of_criteria=True):
+        """Get all pairs of criteria."""
+        if of_criteria:
+            return list(combinations(list(self.criteria.keys()), 2))
+        else:
+            return list(combinations(list(self.alternatives.keys()), 2))
+
+    def add_criterion(self, name: str, data_type: str, goal: str):
+        """Add a criterion."""
+
+        name_ = name
+        data_type_ = DataType.from_string(data_type)
+        goal_ = DataGoal.from_string(goal)
+
+        if data_type_ is None or goal_ is None:
+            raise TypeError('Failed to cast to a proper data type or goal.')
+
+        criteria = Criteria(name_, data_type_, goal_)
+        self.criteria[criteria.name] = criteria
+        self.alternatives_values[criteria.name] = {}
+
+    def add_alternative(self, name: str):
+        self.alternatives[name] = Alternative(name=name, criteria=self.criteria)
+
+    def set_value(self, criterion: str, alternative: str, value: typing.Union[float, int, QualitativeValue]):
+
+        if self.criteria[criterion].data_type is DataType.Qualitative and type(value) is not QualitativeValue:
+            try:
+                value = QualitativeValue(value)
+            except Exception as exc:
+                raise TypeError(f"Bad value type for qualitative data.")
+        if self.criteria[criterion].data_type is DataType.Quantitative and type(value) not in {int, float}:
+            raise TypeError(f"Bad value type for quantitative data.")
+
+        self.alternatives_values[criterion][alternative] = value
+
+    def get_value(self, criterion: str, alternative: str, numeric=True):
+
+        value = self.alternatives_values[criterion][alternative]
+        if numeric and self.criteria[criterion].data_type is DataType.Qualitative:
+            value = value.value
+        return value
 
 
 class AHPException(Exception):
     pass
 
 
-class AHPDataFrameModel:
-    """A structure that holds a dataframe and some intermediary results. This just establishes some API for the way
-    we store additional data associated with the data frame, like results of row/column operations."""
+class AHPTitledResult:
 
-    def __init__(
-            self,
-            name: str,
-            values: dict = None,
-            data_frame: pd.DataFrame = None,
-            row_results: dict = None,
-            col_results: dict = None
-    ):
-        self.__name = name  # Name, mostly useful for printing
-        self.data_frame = data_frame  # The data frame itself
-        self.values = values if values is not None else {}  # Some values we associate with this dataframe
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
 
-        # These are important results, but we do not want to append them directly as rows/cols of the dataframe,
-        # so we store them 'externally' instead.
 
-        self.row_results = row_results if row_results is not None else {}  # Row results (for example each column's sum)
-        self.col_results = col_results if col_results is not None else {}  # Column results (for example each row's sum)
+class AHP_PdDataFrameMatrix(AHPTitledResult):
+
+    def __init__(self, name: str, value: pd.DataFrame):
+        super().__init__(name, value)
+
+
+class AHP_PythonListVector(AHPTitledResult):
+
+    def __init__(self, name: str, value: typing.Union[list, tuple]):
+        super().__init__(name, value)
+
+
+class AHP_PythonNumericValue(AHPTitledResult):
+
+    def __init__(self, name: str, value: typing.Union[float, int]):
+        super().__init__(name, value)
+
+
+class AHPProcessor:
+    def __init__(self, data_mode: DataModel, importance_matrix: pd.DataFrame):
+
+        if not len(data_mode.criteria) < self.criteria_limit:
+            raise AHPException(f"The AHP model works with up to {self.criteria_limit} criteria.")
+
+        self.data_model = data_mode
+        self.importance_matrix = importance_matrix
+
+        self.storage = {
+            'criteria': {
+                'matrices': {'pairwise': None, 'normalized': None},
+                'vectors': {'sum': None, 'priority': None},
+                'values': {'lambda_max': None, 'ci': None, 'cr': None, 'cr': None}
+            },
+            'alternatives': {
+                criteria: {
+                    'matrices': {'pairwise': None, 'normalized': None},
+                    'vectors': {'sum': None, 'priority': None},
+                    'values': {'lambda_max': None, 'ci': None, 'cr': None, 'cr': None}
+                } for criteria in self.data_model.criteria}
+        }
+
+    def get_criteria_matrices_as_dict(self, *keys):
+        return {k: v for k, v in [self.storage['criteria']['matrices'][k] for k in keys]}
+
+    def get_criteria_vectors_as_dict(self, *keys):
+        return {k: v for k, v in [self.storage['criteria']['vectors'][k] for k in keys]}
+
+    def get_criteria_values_as_dict(self, *keys):
+        return {k: v for k, v in [self.storage['criteria']['values'][k] for k in keys]}
+
+    def get_alternatives_matrices_as_dict(self, *keys):
+        return {k: v for k, v in [self.storage['alternatives']['matrices'][k] for k in keys]}
+
+    def get_alternatives_vectors_as_dict(self, *keys):
+        return {k: v for k, v in [self.storage['alternatives']['vectors'][k] for k in keys]}
+
+    def get_alternatives_values_as_dict(self, *keys):
+        return {k: v for k, v in [self.storage['alternatives']['values'][k] for k in keys]}
+
+    # ------------------------------------------------------------------------------------------------------------------
+    #
+    # Properties
+    #
+    # ------------------------------------------------------------------------------------------------------------------
 
     @property
-    def name(self):
-        return self.__name
+    def criteria_limit(self):
+        return len(self.saaty_random_index_table())
+
+    @staticmethod
+    def saaty_random_index_table():
+        """The table of random consistency indices for each reciprocal (pairwise) matrix size."""
+        return {
+            1: 0,          2: 0,          3: 0.52,          4: 0.89,          5: 1.11,
+            6: 1.25,       7: 1.35,       8: 1.40,          9: 1.45,         10: 1.49,
+            11: 1.51,     12: 1.54,      13: 1.56,         14: 1.57,         15: 1.58
+        }
+
+    # ------------------------------------------------------------------------------------------------------------------
+    #
+    # Processing
+    #
+    # ------------------------------------------------------------------------------------------------------------------
+
+    def _build_alternatives_pairwise_matrix_from_values(self, criteria: str):
+        df = pd.DataFrame()
+
+        alternative_pairs = self.data_model.get_minimum_pairs(of_criteria=False)
+
+        for alternative in self.data_model.alternatives:
+            pandas_utils.add_col(df, alternative)
+            pandas_utils.add_row(df, alternative)
+            df.at[alternative, alternative] = 1.0
+
+        for alternative1, alternative2 in alternative_pairs:
+            value1 = self.data_model.get_value(criteria, alternative1)
+            value2 = self.data_model.get_value(criteria, alternative2)
+
+            df.at[alternative1, alternative2] = value1 / value2
+            df.at[alternative2, alternative1] = value2 / value1
+
+        return AHP_PdDataFrameMatrix('Pairwise matrix', df)
+
+    def process(self, log=False):
+
+        # Will eventually replace floats with float 64 or something.
+
+        # Shortcuts
+
+        cmat = self.storage['criteria']['matrices']
+        cvec = self.storage['criteria']['vectors']
+        cval = self.storage['criteria']['values']
+
+        # Parse the Importance matrix into the decimal Pairwise Criteria matrix.
+        cmat['pairwise'] = self.compute__parse_importance_matrix(self.importance_matrix)
+
+        # ----------------------------------------------------------------------------------------------------
+        if log:
+            self._log(cmat['pairwise'])
+        # ----------------------------------------------------------------------------------------------------
+
+        # Normalize the pairwise criteria matrix.
+        cmat['normalized'], cvec['sum'] = self.compute__normalized_pairwise_matrix(cmat['pairwise'])
+
+        # ----------------------------------------------------------------------------------------------------
+        if log:
+            self._log(cmat['normalized'], extra_rows=py_utils.get_multiple(cvec, 'sum'))
+        # ----------------------------------------------------------------------------------------------------
+
+        # Compute the priority vector
+        cvec['priority'] = self.compute__priority_vector(cmat['normalized'])
+
+        # ----------------------------------------------------------------------------------------------------
+        if log:
+            self._log(cmat['pairwise'], extra_cols=py_utils.get_multiple(cvec, 'priority'))
+        # ----------------------------------------------------------------------------------------------------
+
+        # If criterion A is preferred over criterion B (A > B), and criterion B is preferred over criterion C
+        # (B > C), then by the transitive property we should conclude that criterion A is preferred over criterion C
+        # (A > C). If this is not actually the case, then the weights of the criteria are set inconsistently.
+        #
+        # In order to detect inconsistencies in the judgement of criteria, we will calculate Saaty's Consistency
+        # Ratio: CR = CI / RI, where CI is Saaty's Consistency Index and RI is Saaty's Random Consistency Index.
+
+        cval['lambda_max'] = self.compute__eigen_value(cmat['pairwise'], cvec['priority'])
+
+        # ----------------------------------------------------------------------------------------------------
+        if log:
+            self._log(caption='Eigen value', extra_values=py_utils.get_multiple(cval, 'lambda_max'))
+        # ----------------------------------------------------------------------------------------------------
+
+        # Check if consistency is below the 10% threshold set by Saaty. To do that we need to compute Saaty's
+        # consistency ratio CR = CI / RI, where CI is the consistency index and RI is the random consistency index.
+        # The consistency index is obtained from Saaty's formula: CI = (lambda_max - n) / (n - 1), where lambda_max
+        # is the principal eigen value and n is the dimension of the reciprocal matrix.
+
+        cval['ci'], cval['ri'], cval['cr'] = self.compute__consistency_data(
+            cval['lambda_max'], len(self.data_model.criteria))
+
+        # ----------------------------------------------------------------------------------------------------
+        if log:
+            self._log(
+                caption='Consistency data', extra_values=py_utils.get_multiple(cval, 'lambda_max', 'ci', 'ri', 'cr')
+            )
+        # ----------------------------------------------------------------------------------------------------
+
+        if not cval['cr'].value < 0.10:
+            raise AHPException(
+                "Pairwise matrix is not consistent. CR={0:.0%}".format(cr) +
+                ", which violates the maximum threshold of 10%."
+            )
+
+        #
+        # Alternatives
+        #
+
+        for criteria in self.data_model.criteria:
+
+            # Shortcuts
+            amat = self.storage['alternatives'][criteria]['matrices']
+            avec = self.storage['alternatives'][criteria]['vectors']
+            aval = self.storage['alternatives'][criteria]['values']
+
+            amat['pairwise'] = self._build_alternatives_pairwise_matrix_from_values(criteria)
+            amat['normalized'], avec['sum'] = self.compute__normalized_pairwise_matrix(amat['pairwise'])
+            avec['priority'] = self.compute__priority_vector(amat['normalized'])
+            aval['lambda_max'] = self.compute__eigen_value(amat['pairwise'], avec['priority'])
+            aval['ci'], aval['ri'], aval['cr'] = self.compute__consistency_data(
+                aval['lambda_max'], len(self.data_model.alternatives))
+
+            # ----------------------------------------------------------------------------------------------------
+            if log:
+                self._log(amat['pairwise'], comment=criteria,
+                          extra_cols=py_utils.get_multiple(avec, 'priority'),
+                          extra_values=py_utils.get_multiple(aval, 'lambda_max', 'ci', 'ri', 'cr'))
+            # ----------------------------------------------------------------------------------------------------
+
+        eigenvalue_matrix = pd.DataFrame()
+
+        for criteria in self.importance_matrix.index:
+            pandas_utils.add_col(eigenvalue_matrix, criteria)
+
+        for alternative in self.data_model.alternatives.values():
+            pandas_utils.add_row(eigenvalue_matrix, alternative.name)
+
+        for criteria in self.importance_matrix.index:
+            priority_vector = self.storage['alternatives'][criteria]['vectors']['priority']
+            pandas_utils.add_col(eigenvalue_matrix, criteria, priority_vector.value)
+
+        # ----------------------------------------------------------------------------------------------------
+        if log:
+            self._log(AHP_PdDataFrameMatrix('Eigenvalue matrix', eigenvalue_matrix))
+        # ----------------------------------------------------------------------------------------------------
+
+        ranking = {}
+
+        for alternative in self.data_model.alternatives.values():
+            row = eigenvalue_matrix.loc[alternative.name]
+            ranking[alternative.name] = 0
+
+            for criterion, weight in zip(self.importance_matrix.index, cvec['priority'].value):
+                value = row[criterion]
+                weighted = value * weight
+
+                if self.data_model.criteria[criterion].goal is DataGoal.Maximize:
+                    ranking[alternative.name] += weighted
+                else:
+                    ranking[alternative.name] -= weighted
+
+        # ----------------------------------------------------------------------------------------------------
+        if log:
+            to_log = [AHP_PythonNumericValue(name, float(score)) for name, score in ranking.items()]
+            self._log(caption='Ranking', extra_values=to_log)
+        # ----------------------------------------------------------------------------------------------------
+
+        return ranking
+
+    # ------------------------------------------------------------------------------------------------------------------
+    #
+    # Static Computational Blocks
+    #
+    # ------------------------------------------------------------------------------------------------------------------
+
+    @staticmethod
+    def compute__parse_importance_matrix(importance_matrix: pd.DataFrame):
+        df = pd.DataFrame.copy(importance_matrix)
+        for row in df.index:
+            for col in df.columns:
+                df.loc[row, col] = df.loc[row, col].numeric
+
+        return AHP_PdDataFrameMatrix('Pairwise matrix', df)
+
+    @staticmethod
+    def compute__normalized_pairwise_matrix(pairwise_matrix: AHP_PdDataFrameMatrix):
+        df = pd.DataFrame.copy(pairwise_matrix.value)
+
+        columns_summed = [sum(df[col]) for col in df.index]
+
+        for row in df.index:
+            for j, col in enumerate(df.columns):
+                df.loc[row, col] /= columns_summed[j]
+
+        return AHP_PdDataFrameMatrix('Normalized pairwise matrix', df), AHP_PythonListVector('Sum', columns_summed)
+
+    @staticmethod
+    def compute__priority_vector(normalized_pairwise_matrix: AHP_PdDataFrameMatrix):
+        """Obtain the normalized principal eigenvector (priority vector) of a pairwise matrix by averaging across each
+        row."""
+
+        df = pd.DataFrame.copy(normalized_pairwise_matrix.value)
+
+        priority_vector = []
+        for row in df.index:
+            row_sum = sum([df.loc[row, col] for col in df.columns])
+            priority_vector.append(row_sum / len(df.index))
+
+        return AHP_PythonListVector('Priority', priority_vector)
+
+    @staticmethod
+    def compute__eigen_value(pairwise_matrix: AHP_PdDataFrameMatrix, priority_vector: AHP_PythonListVector):
+        """
+            There are different ways to compute the principal eigenvalue for a given pairwise matrix. We are computing
+            it using the direct formula:
+
+                            sum (WEIGHTED_PRIORITY_VECTOR / PRIORITY_VECTOR)
+            lambda_max =    ------------------------------------------------   ,      where
+                                    PAIRWISE_MATRIX_DIMENSION
+
+            * WEIGHTED_PRIORITY_VECTOR = PAIRWISE_MATRIX * PRIORITY_VECTOR
+        """
+
+        df = pd.DataFrame.copy(pairwise_matrix.value)
+        priorities = priority_vector.value
+
+        #
+        # Part 1: Calculate the weighted priority vector
+        #
+
+        weighted_priority_vector = []
+
+        for row in df.index:  # for each row
+            weighted_row_elements = []  # weight and gather the row elements here
+
+            for j, col in enumerate(df.columns):  # for each column
+                priority = priorities[j]  # get the priority for that column
+                node = df.loc[row, col]  # get the row element
+                df.at[
+                    row, col] = node * priority  # multiply the element by the priority and set the node's new value
+                weighted_row_elements.append(df.at[row, col])  # store the result for later summation
+
+            summed = sum(weighted_row_elements)  # sum the weighted row elements
+
+            # Corner case weirdness because I'm using floats.
+            # The idea is if I get 3.9999999... turn it into 4, or I get negative consistency indices down the road.
+            if summed + 0.000000001 >= math.ceil(summed):
+                summed = math.ceil(summed)
+
+            weighted_priority_vector.append(summed)  # finally, store the sum
+
+        #
+        # Part 2: Calculate the principal eigen value lambda_max
+        #
+
+        sums_over_priorities = [s / p for s, p in zip(weighted_priority_vector, priorities)]
+        eigen_value = sum(sums_over_priorities) / len(df.index)
+
+        return AHP_PythonNumericValue('Lambda Max', eigen_value)
+
+    @staticmethod
+    def compute__consistency_data(lambda_max: AHP_PythonNumericValue, pairwise_matrix_dimension: int):
+        lmax = lambda_max.value
+        n = pairwise_matrix_dimension
+        ci = (lmax - n) / (n - 1)
+        ri = AHPProcessor.saaty_random_index_table()[n]
+        cr = ci / ri if ri > 0 else 0
+
+        CI = AHP_PythonNumericValue('Consistency Index (CI)', ci)
+        RI = AHP_PythonNumericValue('Random Consistency Index (RI)', ri)
+        CR = AHP_PythonNumericValue('Consistency Ratio (CR)', cr)
+
+        return CI, RI, CR
+
+    # ------------------------------------------------------------------------------------------------------------------
+    #
+    # Logging
+    #
+    # ------------------------------------------------------------------------------------------------------------------
+
+    def _log(
+            self,
+            data_frame: AHPTitledResult = None,  # The data frame that will be printed.
+            comment: str = None,  # Add clarification or something noteworthy.
+            caption: str = None,  # Information about what we are logging / showing.
+
+            # Extra rows to be added to the data frame before it is printed.
+            extra_rows: typing.Union[typing.List[AHP_PythonNumericValue], typing.Tuple[AHP_PythonNumericValue]] = None,
+
+            # Extra columns to be added to the data frame before it is printed.
+            extra_cols: typing.Union[typing.List[AHP_PythonListVector], typing.Tuple[AHP_PythonListVector]] = None,
+
+            # Key-value pairs to also be logged.
+            extra_values: typing.Union[typing.List[AHP_PythonNumericValue], typing.Tuple[AHP_PythonNumericValue]] = None
+    ):
+
+        df = pd.DataFrame.copy(data_frame.value) if data_frame is not None else None
+
+        if extra_rows is not None:
+            for row in extra_rows:
+                pandas_utils.add_row(df, row.name, row.value)
+
+        if extra_cols is not None:
+            for col in extra_cols:
+                pandas_utils.add_col(df, col.name, col.value)
+
+        margin = '\n\n\n'
+        func = py_utils.current_function(go_back=2) + "()"
+        func += f" [{data_frame.name}]" if data_frame is not None else ""
+        comment = f'({comment})' if comment is not None else None
+        caption = f'Caption: {caption}' if caption is not None else None
+
+        print(margin)
+        print(func)
+        print(comment) if comment is not None else None
+        print(caption) if caption is not None else None
+        print()
+        print(df) if df is not None else None
+        print() if df is not None else None
+        if extra_values is not None:
+            print("{0:30} {1:10} {2}".format('KEYS', ' ', 'VALUES'))
+            for result in extra_values:
+                if type(result.value) not in {int, float, str, list, dict, tuple}:
+                    v = type(result.value)
+                else:
+                    v = result.value
+                print("{0:30} {1:10} {2}".format(result.name, '-', v))
+        print(margin)
 
 
 class AHPModel:
 
-    """Analytic Hierarchy Process model."""
+    """
+    Analytic Hierarchy Process model.
 
-    def __init__(self, goal: str):
-        self.goal = goal
-        self.criteria = {}
-        self.data_frame = pd.DataFrame()
+    3-level version:
 
-        self._max_criteria = len(self.saaty_random_index_table)
+                                      +------+
+                                      | Goal |                                    LEVEL 0 (GOAL)
+                                      +------+
+                                         |
+                                         |
+                               +---------+----------+
+                               |                    |
+                               |                    |
+                         +------------+      +------------+
+                         | Criteria 1 |      | Criteria 1 |                        LEVEL 1 (CRITERIA)
+                         +------------+      +------------+
+                               |                   |
+                               |                   |
+                     +---------|---------+---------+----------+
+                     |         |         |                    |
+                     |         |         |                    |
+                +--------------+------+--------------------+  |
+                |    |                |  |                 |  |
+                |    |                |  |                 |  |
+        +---------------+       +---------------+       +---------------+
+        | Alternative 1 |       | Alternative 1 |       | Alternative 1 |          LEVEL 2 (ALTERNATIVES)
+        +---------------+       +---------------+       +---------------+
 
-    #
-    # Properties
-    #
+    """
 
-    @cached_property
-    def saaty_random_index_table(self):
+    def __init__(self, data_model: DataModel, backend: typing.Union[type(AHPProcessor)] = AHPProcessor):
 
-        """The table of random consistency indices for each reciprocal (pairwise) matrix size."""
+        self.data_model = data_model
+        self.backend_class = backend
+        self.importance_matrix = pd.DataFrame()
 
-        return {
-            1: 0,
-            2: 0,
-            3: 0.52,
-            4: 0.89,
-            5: 1.11,
-            6: 1.25,
-            7: 1.35,
-            8: 1.40,
-            9: 1.45,
-            10: 1.49,
-            11: 1.51,
-            12: 1.54,
-            13: 1.56,
-            14: 1.57,
-            15: 1.58
-        }
-
-    #
-    #
-    #
-    # Logging
-    #
-    #
-    #
-
-    def _log_processing(self, dfm: AHPDataFrameModel, header="", use_this_df_instead: pd.DataFrame = None):
-
-        df_ = pd.DataFrame.copy(dfm.data_frame if use_this_df_instead is None else use_this_df_instead)
-
-        for row_name, row in dfm.row_results.items():
-            pandas_utils.add_row(df_, row_name, row)
-
-        for col_name, col in dfm.col_results.items():
-            pandas_utils.add_col(df_, col_name, col)
-
-        data_frame_info = f"(DataFrame - {dfm.name})"
-        data_frame_info += "[Overridden]" if use_this_df_instead is not None else ""
-        data_frame_info += '\n'
-
-        print('\n\n\n')
-        print(header)
-        print(data_frame_info)
-        print(df_)
-        print()
-        if len(dfm.values) > 0:
-            print("{0:30} {1:10} {2}".format('KEYS', ' ', 'VALUES'))
-            for k, v in dfm.values.items():
-                if type(v) not in {int, float, str, list, dict, tuple}:
-                    v = type(v)
-                print("{0:30} {1:10} {2}".format(k, '-', v))
-        print('\n\n\n')
-
-    #
-    #
-    #
-    # Python Dunders
-    #
-    #
-    #
-
-    def __repr__(self):
-
-        return "\n" + self.goal + "\n\n" + self.data_frame.__repr__()
-
-    #
-    #
-    #
-    # API - Getting
-    #
-    #
-    #
-
-    def goal(self, name: str):
-        return self.criteria[name].goal
-
-    def data_type(self, name: str):
-        return self.criteria[name].data_type
-
-    def position(self, name: str):
-        return self.criteria[name].position
-
-    def get_criteria_names(self):
-        return list(self.criteria.keys())
-
-    def get_pairwise(self):
-        """Get all criteria pairs."""
-        pairwise_combinations = list(combinations(self.get_criteria_names(), 2))
-        return pairwise_combinations
-
-    #
-    #
-    #
-    # API - Logic
-    #
-    #
-    #
-
-    def add_criteria(self, name: str, data_type: str, goal: str):
-
-        if len(self.criteria) == self._max_criteria:
-            raise AHPException(f"The AHP model works with up to {self._max_criteria} criteria.")
-
-        position_ = len(self.criteria)
-        name_ = name
-        data_type_ = DataType.from_string(data_type)
-        goal_ = DataGoal.from_string(goal)
-
-        criteria = AHPCriteria(position_, name_, data_type_, goal_)
-        self.criteria[criteria.name] = criteria
-
-        # Add criteria column
-        self.data_frame[criteria.name] = Important.Equally
-        # Add criteria row
-        self.data_frame.loc[len(self.data_frame.index)] = Important.Equally
-        # Change the row name to the criteria name instead of the default indexing number
-        self.data_frame.rename({len(self.data_frame.index) - 1: criteria.name}, axis='index', inplace=True)
+        for criteria in self.data_model.criteria:
+            pandas_utils.add_col(self.importance_matrix, criteria, unfilled=Important.Equally)
+            pandas_utils.add_col(self.importance_matrix, criteria, unfilled=Important.Equally)
+            self.importance_matrix.at[criteria, criteria] = Important.Equally
 
     def set_weight(self, criteria: str, other_criteria: str, value: int):
-        """Set pairwise comparison weight between two criteria."""
+        """Set an importance weight between two criteria."""
+
         if criteria == other_criteria:
             raise ValueError("Cannot weight a criteria against itself.")
         if value not in Important.range():
             raise ValueError(f"{value} not in range {Important.range()}.")
 
-        self.data_frame.loc[criteria][other_criteria] = Important(value)
-        self.data_frame.loc[other_criteria][criteria] = Important(-value)
+        self.importance_matrix.loc[criteria, other_criteria] = Important(value)
+        self.importance_matrix.loc[other_criteria, criteria] = Important(-value)
 
-    #
-    #
-    #
-    # API - Execute
-    #
-    #
-    #
+
+    def __repr__(self):
+        return "\n" + self.data_model.goal + "\n" + self.importance_matrix.__repr__()
 
     def process(self, log=False):
-
-        # Dev note: Using pandas DataFrame instead of numpy ndarrays is definitely not the most optimal way to
-        # implement this, especially considering that DataFrames are not meant to be used as matrices. However,
-        # DataFrame makes it easy to visualize and neatly document the process. In the future I can implement
-        # additional backends to process this more efficiently.
-
-        # Since this process is quite complex, I've split the procedure into multiple inner functions prefixed by
-        # '_processing'. This makes it easier to read (allows for more extensive documentation and declarative-style
-        # coding), log (we can access the function's name to log the current step instead of hard-coding strings)
-        # and debug (the stack trace would print the inner function in which a problem has occurred, which carries
-        # semantic meaning).
-
-        # >
-        # >
-        # >
-
-        def _process_get_pairwise_matrix():
-            # Parse all enum weights into their respective numeric values.
-
-            for row in self.criteria:
-                for col in self.criteria:
-                    df.loc[row][col] = df.loc[row][col].numeric
-
-            pairwise.data_frame = pd.DataFrame.copy(df)
-            self._log_processing(pairwise, py_utils.current_function()) if log else None
-
-        # >
-        # >
-        # >
-
-        def _process_sum_columns():
-            # Sum each column. We do this in order to later normalize the nodes.
-
-            pairwise.row_results['Sum'] = [sum(df[col]) for col in self.criteria]  # Sum each column
-            self._log_processing(pairwise, py_utils.current_function()) if log else None
-
-        # >
-        # >
-        # >
-
-        def _process_normalize_pairwise_matrix():
-            # Divide each element by its column's sum, in order to normalize the pairwise matrix.
-
-            for row in self.criteria:
-                for i, col in enumerate(self.criteria):
-                    df.loc[row][col] /= pairwise.row_results['Sum'][i]
-
-            normalized_pairwise.data_frame = pd.DataFrame.copy(df)
-            self._log_processing(normalized_pairwise, py_utils.current_function()) if log else None
-
-        # >
-        # >
-        # >
-
-        def _process_compute_priority_vector():
-            # Obtain the normalized principal eigenvector (priority vector) by averaging across each row.
-
-            priorities = []
-            for row in self.criteria:
-                summed = sum([df.loc[row][col] for col in self.criteria])
-                priorities.append(summed / len(self.criteria))
-
-            normalized_pairwise.col_results['Priority'] = priorities
-            self._log_processing(normalized_pairwise, py_utils.current_function()) if log else None
-
-        # >
-        # >
-        # >
-
-        def _process_compute_principal_eigen_value():
-            """If criterion A is preferred over criterion B (A > B), and criterion B is preferred over criterion C
-            (B > C), then by the transitive property we should conclude that criterion A is preferred over criterion C
-            (A > C). If this is not actually the case, then the weights of the criteria are set inconsistently.
-            
-            In order to detect inconsistencies in the judgement of criteria, we will calculate Saaty's Consistency
-            Ratio: CR = CI / RI, where CI is Saaty's Consistency Index and RI is Saaty's Random Consistency Index.
-
-            Using the principal eigen (priority) vector, we find the principal eigen value lambda_max, which is needed
-            to compute the consistency index.
-
-            lambda_max = sum ( (PAIRWISE_MATRIX * PRIORITY_VECTOR) / WEIGHTED_SUM_VECTOR ) / PAIRWISE_MATRIX_SIZE
-            """
-
-            df = pd.DataFrame.copy(pairwise.data_frame)
-
-            priorities = normalized_pairwise.col_results['Priority']
-
-            for j, col in enumerate(self.criteria):
-                priority = priorities[j]
-                for row in self.criteria:
-                    node = df.loc[row].at[col]
-                    df.at[row, col] = node * priority
-
-            sums = []
-
-            for row in self.criteria:
-                sums.append(sum([df.at[row, col] for col in self.criteria]))
-            pairwise.col_results['Weighted Sum'] = sums
-
-            eigen_value = sum( [sm / pr for sm, pr in zip(sums, priorities)] ) / len(self.criteria)
-            values['eigen_value'] = eigen_value
-
-            self._log_processing(pairwise, py_utils.current_function(), df) if log else None
-
-        # >
-        # >
-        # >
-
-        def _process_compute_consistency_index():
-            """The consistency index is obtained by Saaty's formula: CI = (lambda_max - n) / (n - 1), where lambda_max
-            is the principal eigen value and n is the dimension of the reciprocal matrix."""
-
-            lambda_max = values['eigen_value']
-            n = len(self.criteria)
-            ci = (lambda_max - n) / (n - 1)
-            values['CI'] = ci
-
-            self._log_processing(pairwise, py_utils.current_function(), df) if log else None
-
-        # >
-        # >
-        # >
-
-        def _process_compute_consistency_ratio():
-            """The consistency ratio is obtained by the formula CR = CI / RI."""
-
-            ci = values['CI']
-            ri = self.saaty_random_index_table[len(self.criteria)]
-            cr = ci / ri
-            values['CR'] = cr
-
-            self._log_processing(pairwise, py_utils.current_function(), df) if log else None
-
-        # >
-        # >
-        # >
-
-        def _process_check_consistency():
-            """Check if consistency is below the 10% threshold set by Saaty."""
-
-            cr = values['CR']
-            if not cr < 0.10:
-                raise AHPException(
-                    "Judgement matrix is not consistent. Calculated {0:.0%}".format(cr) +
-                    " consistency ratio (must be < 10%)."
-                )
-
-        # >
-        # >
-        # >
-        # >
-        # >
-        # >
-
-        with pandas_utils.no_truncating():
-
-            # Preparation
-
-            df = pd.DataFrame.copy(self.data_frame)
-            values = {}
-
-            pairwise = AHPDataFrameModel('Pairwise matrix', values)
-            normalized_pairwise = AHPDataFrameModel('Normalized pairwise matrix', values)
-            
-            # Procedure
-
-            self._log_processing(pairwise, py_utils.current_function(), df) if log else None
-            
-            _process_get_pairwise_matrix()
-            _process_sum_columns()
-            _process_normalize_pairwise_matrix()
-            _process_compute_priority_vector()
-            _process_compute_principal_eigen_value()
-            _process_compute_consistency_index()
-            _process_compute_consistency_ratio()
-            _process_check_consistency()
+        processor = self.backend_class(self.data_model, self.importance_matrix)
+        processor.process(log=log)
+    
+    # def process(self, log=False):
+    #
+    #     # Dev note: Using pandas DataFrame instead of numpy ndarrays is definitely not the most optimal way to
+    #     # implement this, especially considering that DataFrames are not meant to be used as matrices. However,
+    #     # DataFrame makes it easy to visualize and neatly document the process. In the future I can implement
+    #     # additional backends to process this more efficiently.
+    #
+    #     # Since this process is quite complex, I've split the procedure into multiple inner functions prefixed by
+    #     # '_processing'. This makes it easier to read (allows for more extensive documentation and declarative-style
+    #     # coding), log (we can access the function's name to log the current step instead of hard-coding strings)
+    #     # and debug (the stack trace would print the inner function in which a problem has occurred, which carries
+    #     # semantic meaning).
+    #
+    #     # >
+    #     # >
+    #     # >
+    #
+    #     # Utility functions
+    #
+    #     def grab(*keys):
+    #         return {key: results[key] for key in keys}
+    #
+    #     def vals(*keys):
+    #         return {key: values[key] for key in keys}
+    #
+    #     # >
+    #     # >
+    #     # >
+    #
+    #     def _process_get_pairwise_matrix():
+    #         # Parse all enum weights into their respective numeric values.
+    #
+    #         for row in self.criteria:
+    #             for col in self.criteria:
+    #                 df.loc[row][col] = df.loc[row][col].numeric
+    #
+    #         nonlocal df_criteria_pairwise
+    #         df_criteria_pairwise = pd.DataFrame.copy(df)
+    #
+    #         # log ------------------------------
+    #         self._log(df, df_info='Pairwise matrix.', title=py_utils.current_function()) if log else None
+    #         # ----------------------------------
+    #
+    #     # >
+    #     # >
+    #     # >
+    #
+    #     def _process_normalize_pairwise_matrix():
+    #         # Divide each element by its column's sum, in order to normalize the pairwise matrix.
+    #
+    #         # Sum each column. We do this in order to later normalize the nodes.
+    #         results['Sum'] = [sum(df[col]) for col in self.criteria]  # Sum each column
+    #
+    #         # log ------------------------------
+    #         self._log(df, df_info='Pairwise matrix.', title=py_utils.current_function(), post_title='Sums',
+    #                   extra_rows=grab('Sum')) if log else None
+    #         # ----------------------------------
+    #
+    #         for row in self.criteria:
+    #             for i, col in enumerate(self.criteria):
+    #                 df.loc[row][col] /= results['Sum'][i]
+    #
+    #         df_normalized_pairwise = pd.DataFrame.copy(df)
+    #
+    #         # log ------------------------------
+    #         self._log(df, df_info='Normalized pairwise matrix.', title=py_utils.current_function(), post_title='Final',
+    #                   extra_rows=grab('Sum')) if log else None
+    #         # ----------------------------------
+    #
+    #     # >
+    #     # >
+    #     # >
+    #
+    #     def _process_compute_priority_vector():
+    #         # Obtain the normalized principal eigenvector (priority vector) by averaging across each row.
+    #
+    #         priorities = []
+    #         for row in self.criteria:
+    #             summed = sum([df.loc[row][col] for col in self.criteria])
+    #             priorities.append(summed / len(self.criteria))
+    #
+    #         results['Priority'] = priorities
+    #
+    #         # log ------------------------------
+    #         self._log(df, df_info='Normalized pairwise matrix.', title=py_utils.current_function(),
+    #                   extra_rows=grab('Sum'), extra_cols=grab('Priority')) if log else None
+    #         # ----------------------------------
+    #
+    #     # >
+    #     # >
+    #     # >
+    #
+    #     def _process_compute_principal_eigen_value():
+    #         """
+    #         If criterion A is preferred over criterion B (A > B), and criterion B is preferred over criterion C
+    #         (B > C), then by the transitive property we should conclude that criterion A is preferred over criterion C
+    #         (A > C). If this is not actually the case, then the weights of the criteria are set inconsistently.
+    #
+    #         In order to detect inconsistencies in the judgement of criteria, we will calculate Saaty's Consistency
+    #         Ratio: CR = CI / RI, where CI is Saaty's Consistency Index and RI is Saaty's Random Consistency Index.
+    #
+    #         Using the principal eigen (priority) vector, we find the principal eigen value lambda_max, which is needed
+    #         to compute the consistency index. There are different ways to compute this value. We are computing it
+    #         using the direct formula:
+    #
+    #
+    #                         sum (WEIGHTED_PRIORITY_VECTOR / PRIORITY_VECTOR)
+    #         lambda_max =    ------------------------------------------------   ,      where
+    #                                 PAIRWISE_MATRIX_DIMENSION
+    #
+    #         * WEIGHTED_PRIORITY_VECTOR = PAIRWISE_MATRIX * PRIORITY_VECTOR
+    #
+    #         """
+    #
+    #         nonlocal df_criteria_pairwise
+    #         df = pd.DataFrame.copy(df_criteria_pairwise)
+    #
+    #         #
+    #         # Part 1: Calculate the weighted priority vector
+    #         #
+    #
+    #         weighted_priority_vector = []
+    #
+    #         for row in self.criteria:  # for each row
+    #             weighted_row_elements = []  # weight and gather the row elements here
+    #
+    #             for col in self.criteria:  # for each col
+    #                 priority = results['Priority'][self.position(col)]  # get the priority for that criteria
+    #                 node = df.loc[row].at[col]  # get the row element / node
+    #                 df.at[row, col] = node * priority  # multiply the element by the priority
+    #                 weighted_row_elements.append(df.at[row, col])  # store the weighted row element for later summation
+    #
+    #             summed = sum(weighted_row_elements)  # sum the weighted row elements
+    #
+    #             # Corner case weirdness because I'm using floats.
+    #             # The idea is if I get 3.9999999... turn it into 4, or I get negative consistency indices down the road.
+    #             if summed + 0.000000001 >= math.ceil(summed):
+    #                 summed = math.ceil(summed)
+    #
+    #             weighted_priority_vector.append(summed)  # save the sum
+    #
+    #         results['Weighted Sum'] = weighted_priority_vector
+    #
+    #         #
+    #         # Part 2: Calculate the principal eigen value lambda_max
+    #         #
+    #
+    #         sums_over_priority = [s / p for s, p in zip(results['Weighted Sum'], results['Priority'])]
+    #         eigen_value = sum(sums_over_priority) / len(self.criteria)
+    #         values['lambda_max'] = eigen_value
+    #
+    #         # log ------------------------------
+    #         self._log(df, df_info='Pairwise matrix after computing lambda_max.', title=py_utils.current_function(),
+    #                   extra_values=vals('lambda_max')) if log else None
+    #         # ----------------------------------
+    #
+    #     # >
+    #     # >
+    #     # >
+    #
+    #     def _process_compute_consistency_index():
+    #         """The consistency index is obtained by Saaty's formula: CI = (lambda_max - n) / (n - 1), where lambda_max
+    #         is the principal eigen value and n is the dimension of the reciprocal matrix."""
+    #
+    #         n = len(self.criteria)
+    #         values['CI'] = (values['lambda_max'] - n) / (n - 1)
+    #
+    #         # log ------------------------------
+    #         self._log(title=py_utils.current_function(), extra_values=vals('lambda_max', 'CI')) if log else None
+    #         # ----------------------------------
+    #
+    #     # >
+    #     # >
+    #     # >
+    #
+    #     def _process_compute_consistency_ratio():
+    #         """The consistency ratio is obtained by the formula CR = CI / RI."""
+    #
+    #         ci = values['CI']
+    #         ri = self.saaty_random_index_table[len(self.criteria)]
+    #         values['CR'] = ci / ri if ri > 0 else 0
+    #
+    #         # log ------------------------------
+    #         self._log(title=py_utils.current_function(), extra_values=vals('lambda_max', 'CI', 'CR')) if log else None
+    #         # ----------------------------------
+    #
+    #     # >
+    #     # >
+    #     # >
+    #
+    #     def _process_check_consistency():
+    #         """Check if consistency is below the 10% threshold set by Saaty."""
+    #
+    #         if not values['CR'] < 0.10:
+    #             raise AHPException(
+    #                 "Judgement matrix is not consistent. Calculated {0:.0%}".format(values['CR']) +
+    #                 " consistency ratio (must be < 10%)."
+    #             )
+    #
+    #     # >
+    #     # >
+    #     # >
+    #
+    #     def _process_weights_of_alternatives():
+    #
+    #         df = pd.DataFrame()
+    #
+    #         for criteria in self.criteria:
+    #             pandas_utils.add_col(df, criteria)
+    #
+    #         for altenrative in self.alternatives:
+    #             pandas_utils.add_row(df, altenrative)
+    #
+    #         for alternative in self.alternatives:
+    #             values = [self.alternatives[alternative].get_numeric(c) for c in self.criteria]
+    #             summed = sum(values)
+    #             priorities = [v / summed for v in values]
+    #
+    #             pandas_utils.add_col(df, alternative, priorities)
+    #
+    #         nonlocal df_alternatives_weighted
+    #         df_alternatives_weighted = pd.DataFrame.copy(df)
+    #
+    #         # log ------------------------------
+    #         self._log(df, df_info='Weights of alternatives.', title=py_utils.current_function())
+    #         # ----------------------------------
+    #
+    #     # >
+    #     # >
+    #     # >
+    #
+    #     def _process_ranking():
+    #         pass
+    #
+    #     # >
+    #     # >
+    #     # >
+    #     # >
+    #     # >
+    #     # >
+    #
+    #     with pandas_utils.no_truncating():
+    #
+    #         # Preparation
+    #
+    #         df = pd.DataFrame.copy(self.data_frame)
+    #
+    #         df_criteria_pairwise = None
+    #         df_criteria_normalized_pairwise = None
+    #         df_alternatives_weighted = None
+    #
+    #         results = {}
+    #         values = {}
+    #
+    #         # Procedure
+    #
+    #         self._log(df, df_info='Initial matrix.', title=py_utils.current_function()) if log else None
+    #
+    #         _process_get_pairwise_matrix()
+    #         _process_normalize_pairwise_matrix()
+    #         _process_compute_priority_vector()
+    #         _process_compute_principal_eigen_value()
+    #         _process_compute_consistency_index()
+    #         _process_compute_consistency_ratio()
+    #         _process_check_consistency()
+    #
+    #         priorities = results['Priority']
+    #         ranking = {}
+    #
+    #         _process_weights_of_alternatives()
+    #         _process_ranking()
+    #
+    #         # for alternative_name, alternative in self.alternatives.items():
+    #         #
+    #         #     weighted_criteria = []
+    #         #     summed = []
+    #         #
+    #         #     for criteria_name, criteria in self.criteria.items():
+    #         #         summed.append(alternative.get_numeric(criteria_name))
+    #         #
+    #         #     summed = sum(summed)
+    #         #
+    #         #     for criteria_name, criteria in self.criteria.items():
+    #         #         normalized_value = alternative.get_numeric(criteria_name) / summed
+    #         #         weight = priorities[criteria.position]
+    #         #
+    #         #         weighted = normalized_value * weight
+    #         #         if criteria.goal is DataGoal.Minimize:
+    #         #             weighted *= -1
+    #         #
+    #         #         weighted_criteria.append(weighted)
+    #         #
+    #         #     ranking[alternative_name] = sum(weighted_criteria)
+    #         #
+    #         # print(ranking) if log else None
+    #         # return ranking

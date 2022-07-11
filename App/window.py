@@ -76,6 +76,69 @@ def InputForm():
     return view
 
 
+def ValuesForm():
+
+    #
+    # Gather UI elements
+    #
+
+    # Gather the various form boxes for the complete form.
+    box1, box2 = CriteriaFormBoxes().form_groups
+    box3, box4 = AlternativesFormBoxes().form_groups
+
+    # Create a proceed button.
+    proceed_btn = CheckButton('Proceed')
+
+    # Configure the form boxes.
+    boxes = [box1, box2, box3, box4]
+    for box in boxes:
+        box.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+    #
+    # Create the view
+    #
+
+    # Create the view
+    view = StyledWidget()
+
+    # Configure the view
+    view.setContentsMargins(15, 15, 15, 15)
+
+    # Set ui elements to the view
+    view.criteria_boxes = [box1, box2]
+    view.alternatives_boxes = [box3, box4]
+    view.proceed_btn = proceed_btn
+
+    #
+    # Configure the layout for the view
+    #
+
+    view.hbox = pyqt_utils.null_layout(QHBoxLayout(view))
+    view.hbox.addStretch(1)
+    vbox = pyqt_utils.null_layout(QVBoxLayout())
+    vbox.setSpacing(15)
+    view.hbox.addLayout(vbox)
+    view.hbox.addStretch(4)
+
+    grid = pyqt_utils.null_layout(QGridLayout())
+    grid.setSpacing(10)
+    grid.addWidget(box1, 0, 0)
+    grid.addWidget(box2, 0, 1)
+    grid.addWidget(box3, 1, 0)
+    grid.addWidget(box4, 1, 1)
+    vbox.addLayout(grid)
+
+    bot_hbox = pyqt_utils.null_layout(QHBoxLayout())
+    bot_hbox.addStretch(2)
+    bot_hbox.addWidget(proceed_btn)
+    bot_hbox.addStretch(1)
+    vbox.addLayout(bot_hbox)
+
+    view.setMinimumWidth(962)
+    return view
+
+
+
 class Window(STYLIZED_WINDOW, BaseWindow, StyledWidget):
 
     INITIAL_SIZE = (1200, 800)

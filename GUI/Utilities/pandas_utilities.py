@@ -30,18 +30,27 @@ def no_truncating():
         pd.set_option('display.width', width)
 
 
-def add_row(df, name, values=None):
-    """Add a new row to the DataFrame's index and rename it."""
+def add_row(df: pd.DataFrame, name, values=None, unfilled=None):
+    """Add a new row to the DataFrame's index and rename it. If the values are less than the columns length, fill the
+    unfilled fields with whatever is passed to 'fill_with'. Override if the row already exists."""
 
-    df.loc[len(df.index)] = values
-    df.rename({len(df.index) - 1: name}, axis='index', inplace=True)
+    v = copy.copy(values) if values is not None else []
+    unfilled_count = len(df.columns) - len(v)
+    v += [unfilled] * unfilled_count
+
+    if name not in df.index:
+        df.loc[len(df.index)] = v
+        df.rename({len(df.index) - 1: name}, axis='index', inplace=True)
+    else:
+        df.loc[name] = v
 
 
 def add_col(df, name, values=None, unfilled=None):
     """Add a column to the DataFrame. If the values are less than the index length, fill the unfilled fields with
-    whatever is passed to 'fill_with'."""
+    whatever is passed to 'fill_with'. Override the column if it already exists."""
 
-    v = copy.copy(values)
+    v = copy.copy(values) if values is not None else []
     unfilled_count = len(df.index) - len(v)
     v += [unfilled] * unfilled_count
+
     df[name] = v

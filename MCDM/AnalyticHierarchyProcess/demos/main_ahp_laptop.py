@@ -1,6 +1,6 @@
 # +====================================================================================================================+
 # Internal
-from MCDM.AnalyticHierarchyProcess.model import AHPModel
+from MCDM.AnalyticHierarchyProcess.model import AHPModel, DataModel
 # +====================================================================================================================+
 
 
@@ -12,12 +12,14 @@ if __name__ == '__main__':
     #    Camera          -       0.1958
     #    Looks           -       0.0646
 
-    AHP = AHPModel(goal="Finding the best laptop.")
+    DM = DataModel(goal="Finding the best laptop.")
 
-    AHP.add_criteria('Price', "Quantitative", "Minimize")
-    AHP.add_criteria('Storage', "Quantitative", "Maximize")
-    AHP.add_criteria('Camera', "Quantitative", "Maximize")
-    AHP.add_criteria('Looks', "Qualitative", "Maximize")
+    DM.add_criterion('Price', "Quantitative", "Minimize")
+    DM.add_criterion('Storage', "Quantitative", "Maximize")
+    DM.add_criterion('Camera', "Quantitative", "Maximize")
+    DM.add_criterion('Looks', "Qualitative", "Maximize")
+
+    AHP = AHPModel(DM)
 
     AHP.set_weight('Price', 'Storage', 5)
     AHP.set_weight('Price', 'Camera', 4)
