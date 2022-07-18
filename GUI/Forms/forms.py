@@ -1,21 +1,31 @@
 # +====================================================================================================================+
+# Pythonic
+from typing import List, Dict, Any, Tuple, Union
+
 # Libs
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QFormLayout, QSizePolicy
 
 # Internal
+from MCDM.AnalyticHierarchyProcess.model import DataModel, AHPException
+from MCDM.AnalyticHierarchyProcess.enums import DataGoal, DataType, QualitativeValue, Important
 from GUI.Utilities import pyqt_utilities as pyqt_utils
 from GUI.Forms.elements import *
+from GUI.Components.layouts import ExtendedHBox, ExtendedVBox
 # +====================================================================================================================+
 
 
 class FormLayout(QFormLayout):
     OBJECT_NAME_FOR_LABELS = 'FormLabel'
+    OBJECT_NAME_FOR_LABELS_MUTED = 'FormLabelMuted'
 
-    def addRow(self, label: typing.Union[QWidget, str] = None, field: QWidget = None) -> None:
+    def addRow(self, label: typing.Union[QWidget, str] = None, field: QWidget = None, label_muted=False) -> None:
         if label is not None:
             super().addRow(label, field)
             if type(label) is str:
-                self.labelForField(field).setObjectName(self.OBJECT_NAME_FOR_LABELS)
+                if label_muted:
+                    self.labelForField(field).setObjectName(self.OBJECT_NAME_FOR_LABELS_MUTED)
+                else:
+                    self.labelForField(field).setObjectName(self.OBJECT_NAME_FOR_LABELS)
         else:
             super().addRow(field)
 
@@ -44,7 +54,7 @@ class FormGroupsNamespace(SimpleNamespace):
 class CriteriaFormBoxes:
 
     def __init__(self):
-        self.form_groups = []
+        self.form_groups: List[FormBox] = []
         self._setup_widgets()
         self._setup_layout()
 
@@ -252,7 +262,6 @@ class AlternativesFormBoxes:
             lay = FormLayout(box1)
 
             # Layout
-
             lay.setSpacing(10)
 
             hbox = pyqt_utils.null_layout(QHBoxLayout())
@@ -283,3 +292,136 @@ class AlternativesFormBoxes:
 
         _setup_box1_layout()
         _setup_box2_layout()
+
+
+class ValuesFormBoxes:
+
+    def __init__(self, data_model: DataModel):
+        self.form_groups: List[FormBox] = []
+        self._setup_view(data_model)
+
+    def _setup_view(self, data_model: DataModel):
+
+        for criterion in data_model.criteria:
+            box = FormBox(title=criterion)
+            box.setMaximumHeight(400)
+
+            hbox = ExtendedHBox(box, spacing=15)
+            vbox = ExtendedVBox(spacing=15)
+            lay = FormLayout()
+            lay.setSpacing(10)
+            hbox.add(15.0, 1, vbox, 1, 15.0)
+            vbox.add(15.0, 1, lay, 1, 15.0)
+
+            for alternative in data_model.alternatives:
+
+                if data_model.criteria[criterion].data_type is DataType.Quantitative:
+                    input_widget = LineEdit(numeric_only=True)
+                    input_widget.setText(str(0.0))
+                    input_widget.setPlaceholderText('Value')
+
+                elif data_model.criteria[criterion].data_type is DataType.Qualitative:
+                    input_widget = ComboBox(choices={e.name: e for e in QualitativeValue})
+                    input_widget.setCurrentIndex(4)
+
+                else:
+                    raise RuntimeError(
+                        "DataType of criterion is neither quantitative nor qualitative, which are the only supported "
+                        "types here."
+                    )
+
+                input_widget.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.Maximum)
+                lay.addRow(alternative, input_widget, label_muted=True)
+                box.set_as_pairs((alternative, input_widget))
+
+            self.form_groups.append(box)
+
+
+class WeightsFormBoxes:
+
+    def __init__(self, data_model: DataModel):
+        self.form_groups: List[FormBox] = []
+        self._setup_view(data_model)
+
+    def _setup_view(self, data_model: DataModel):
+
+        box = FormBox(title='Compare')
+        self.form_groups.append(box)
+
+        hbox = ExtendedHBox(box, spacing=15)
+        vbox = ExtendedVBox(spacing=15)
+        lay = FormLayout()
+        lay.setSpacing(10)
+        hbox.add(15.0, 1, vbox, 1, 15.0)
+        vbox.add(15.0, 1, lay, 1, 15.0)
+
+        choices = {}
+        for e in Important:
+            choice = "(" + str(e) + ") " + e.name
+            choices[choice] = e.value
+
+        pairs = data_model.get_minimum_pairs()
+        for pair in pairs:
+            text1 = LabelMuted(text="Importance of ")
+            text1.set_size_hints('')
+            criteria1 = Label(text=pair[0])
+            text2 = LabelMuted(text=" over ")
+            criteria2 = Label(text=pair[1])
+
+            importance = ComboBox(choices=choices)
+            importance.setCurrentIndex(8)
+
+            hbox = ExtendedHBox()
+            hbox.add(text1, criteria1, text2, criteria2, 1, importance)
+            lay.addRow(field=hbox)
+            box.set_as_pairs((criteria1.text() + '_____' + criteria2.text(), importance))
+
+
+class RankingsFormBoxes:
+
+    def __init__(self, data_model: DataModel, backend):
+        self.form_groups: List[FormBox] = []
+        self._setup_view(data_model, backend)
+
+    def _setup_view(self, data_model: DataModel, backend):
+
+        box = FormBox(title='Ranking')
+        self.form_groups.append(box)
+
+        hbox = ExtendedHBox(box, spacing=15)
+        vbox = ExtendedVBox(spacing=15)
+        lay = FormLayout()
+        lay.setSpacing(10)
+        hbox.add(15.0, 1, vbox, 1, 15.0)
+        vbox.add(15.0, 1, lay, 1, 15.0)
+
+
+        try:
+            ranking = backend.process()
+        except AHPException:
+            problem = Label(str(AHPException))
+            lay.addRow("A problem occurred:", label_muted=True)
+            box.set(problem=problem)
+            return
+
+        ranking_chart = ListWidget(read_only=True)
+        lay.addRow(field=ranking_chart)
+
+        reverse_map = {}
+        values = []
+
+        for alternative, rank in ranking.items():
+            if rank not in reverse_map.keys():
+                reverse_map[rank] = []
+            reverse_map[rank].append(alternative)
+            values.append(rank)
+
+        values.sort(reverse=True)
+
+        for value in values:
+            alternative = reverse_map[value].pop(0)
+            text = f"({str(value)})  {alternative}"
+            item = ListWidgetItem(text)
+            ranking_chart.addItem(item)
+
+        box.set(scores=ranking_chart)

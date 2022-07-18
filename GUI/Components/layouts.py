@@ -1,19 +1,15 @@
-
 # +====================================================================================================================+
-# Pythonic
-from enum import Enum
+# Libs
+from PyQt5.QtWidgets import QHBoxLayout, QVBoxLayout
+
 # Internal
-from GUI.Base.window import BaseWindow
+from GUI.Components.mixins import ExtendedQBoxAPIMixin
 # +====================================================================================================================+
 
 
-STYLIZED_WINDOW: BaseWindow = None
+class ExtendedHBox(ExtendedQBoxAPIMixin, QHBoxLayout):
+    pass
 
 
-def set_base_window_class(cls):
-    global STYLIZED_WINDOW
-    STYLIZED_WINDOW = cls
-
-
-class AppStyle(Enum):
-    Windows11_Dark = 1
+class ExtendedVBox(ExtendedQBoxAPIMixin, QVBoxLayout):
+    pass

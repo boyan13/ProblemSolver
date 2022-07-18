@@ -28,12 +28,21 @@ class DataModel:
         self.alternatives = OrderedDict()
         self.alternatives_values = {}
 
+    def set_goal(self, goal: str):
+        self.goal = goal
+
     def get_minimum_pairs(self, of_criteria=True):
         """Get all pairs of criteria."""
         if of_criteria:
             return list(combinations(list(self.criteria.keys()), 2))
         else:
             return list(combinations(list(self.alternatives.keys()), 2))
+
+    def reset(self):
+        self.goal = ""
+        self.criteria = OrderedDict()
+        self.alternatives = OrderedDict()
+        self.alternatives_values = {}
 
     def add_criterion(self, name: str, data_type: str, goal: str):
         """Add a criterion."""
@@ -181,6 +190,9 @@ class AHPProcessor:
             value1 = self.data_model.get_value(criteria, alternative1)
             value2 = self.data_model.get_value(criteria, alternative2)
 
+            value1 = 0.00000001 if value1 == 0 else value1
+            value2 = 0.00000001 if value2 == 0 else value2
+
             df.at[alternative1, alternative2] = value1 / value2
             df.at[alternative2, alternative1] = value2 / value1
 
@@ -240,7 +252,8 @@ class AHPProcessor:
         # is the principal eigen value and n is the dimension of the reciprocal matrix.
 
         cval['ci'], cval['ri'], cval['cr'] = self.compute__consistency_data(
-            cval['lambda_max'], len(self.data_model.criteria))
+            cval['lambda_max'], len(self.data_model.criteria)
+        )
 
         # ----------------------------------------------------------------------------------------------------
         if log:
@@ -271,7 +284,8 @@ class AHPProcessor:
             avec['priority'] = self.compute__priority_vector(amat['normalized'])
             aval['lambda_max'] = self.compute__eigen_value(amat['pairwise'], avec['priority'])
             aval['ci'], aval['ri'], aval['cr'] = self.compute__consistency_data(
-                aval['lambda_max'], len(self.data_model.alternatives))
+                aval['lambda_max'], len(self.data_model.alternatives)
+            )
 
             # ----------------------------------------------------------------------------------------------------
             if log:
@@ -535,14 +549,13 @@ class AHPModel:
         self.importance_matrix.loc[criteria, other_criteria] = Important(value)
         self.importance_matrix.loc[other_criteria, criteria] = Important(-value)
 
-
     def __repr__(self):
         return "\n" + self.data_model.goal + "\n" + self.importance_matrix.__repr__()
 
     def process(self, log=False):
         processor = self.backend_class(self.data_model, self.importance_matrix)
-        processor.process(log=log)
-    
+        return processor.process(log=log)
+
     # def process(self, log=False):
     #
     #     # Dev note: Using pandas DataFrame instead of numpy ndarrays is definitely not the most optimal way to

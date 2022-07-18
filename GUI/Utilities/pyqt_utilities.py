@@ -15,15 +15,21 @@ def null_layout(layout: typing.Union[QVBoxLayout, QHBoxLayout, QGridLayout]):
     return layout
 
 
-def purge_layout(self, layout: typing.Union[QVBoxLayout, QHBoxLayout]):
+def purge_layout(layout: typing.Union[QVBoxLayout, QHBoxLayout]):
+
     for i in reversed(range(layout.count())):
-        item = layout.itemAt(i)
-        if hasattr(item, 'widget'):
-            item.widget().setParent(QWidget())
-        elif hasattr(item, 'layout'):
-            purge_layout(self, item.layout())
+        item = layout.takeAt(i)
+
+        if hasattr(item, 'widget') and item.widget() is not None:
+            item.widget().setParent(None)
+
+        elif hasattr(item, 'layout') and item.layout() is not None:
+            purge_layout(item.layout())
+
         else:
             layout.removeItem(item)
+
+    QWidget().setLayout(layout)
 
 
 def wrap_in_scroll_area(widget: QWidget, parent=None):

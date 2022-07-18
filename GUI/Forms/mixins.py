@@ -8,7 +8,7 @@ class FormBoxElementMixin:
     def __init__(self, is_harvestable=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if type(is_harvestable) is bool:
-            self.harvestable = lambda: is_harvestable
+            self.harvestable = lambda value=is_harvestable: value
         else:
             raise TypeError()
 
@@ -26,7 +26,7 @@ class FormBoxNonHarvestableElementMixin(FormBoxElementMixin):
         super().__init__(is_harvestable=is_harvestable, *args, **kwargs)
 
 
-class FormBoxMixin:
+class FormBoxMixin():
     def __init__(self, title: str, *args, **kwargs):
         self.elements_to_harvest = []
         self.elements_attributes = []
@@ -37,12 +37,26 @@ class FormBoxMixin:
         return {k: getattr(self, k).harvest() for k in self.elements_to_harvest}
 
     def set(self, **kwargs):
+        """Set the element to the form, in accordance with the FormBoxMixin."""
+
         for attr_name, element in kwargs.items():
-            element.setParent(self)
-            setattr(self, attr_name, element)
-            self.elements_attributes.append(attr_name)
-            if element.harvestable:
-                self.elements_to_harvest.append(attr_name)
+            element.setParent(self)  # parent the element to us
+            setattr(self, attr_name, element)  # save the element as our attribute under the passed name
+            self.elements_attributes.append(attr_name)  # register as form element
+            if element.harvestable():  # if data will be collected from this element
+                self.elements_to_harvest.append(attr_name)  # register the element as a harvestable
+
+    def set_as_pairs(self, *kwargs):
+        """Same as set(), but if we are creating the attribute names dynamically, we can't pass them as kwarg keys, so
+        instead we pass in (key, value) tuples to this method."""
+
+        for kwarg in kwargs:
+            attr_name, element = kwarg
+            element.setParent(self)  # parent the element to us
+            setattr(self, attr_name, element)  # save the element as our attribute under the passed name
+            self.elements_attributes.append(attr_name)  # register as form element
+            if element.harvestable():  # if data will be collected from this element
+                self.elements_to_harvest.append(attr_name)  # register the element as a harvestable
 
 
 class FormMixin:

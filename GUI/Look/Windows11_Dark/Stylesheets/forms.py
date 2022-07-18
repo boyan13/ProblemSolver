@@ -157,6 +157,43 @@ stylesheet_lineedits = f"""
     }}
 """
 
+stylesheet_comboboxes = f"""
+    ComboBox {{
+        background-color: {const.COLOR__FORM_BUTTON__DEFAULT};
+        color: {const.COLOR__FORM_BUTTON_TEXT__DEFAULT};
+
+        font-weight: {const.FONT_WEIGHT__FORM__PRIMARY};
+        font-style: {const.FONT_STYLE};
+        font-size: {const.FONT_SIZE_PX__TEXT}px;
+        font-family: "{const.FONT_FAMILY}";    
+    
+        border-style: solid;
+        border-width: 1px;
+        border-color: {const.COLOR__FORM_BUTTON_BORDER__DEFAULT};
+        border-radius: {const.DIMENSION__BUTTONS_BORDER_RADIUS};
+        
+        padding-left: {const.DIMENSION__FORM_ELEMENT_PADDING_HORIZONTAL}px;
+        padding-right: {const.DIMENSION__FORM_ELEMENT_PADDING_HORIZONTAL}px;
+        padding-top: {const.DIMENSION__FORM_ELEMENT_PADDING_VERTICAL}px;
+        padding-bottom: {const.DIMENSION__FORM_ELEMENT_PADDING_VERTICAL}px;
+    }}
+    ComboBox::hover {{
+        background-color: {const.COLOR__FORM_BUTTON__HOVERED};
+        color: {const.COLOR__FORM_BUTTON_TEXT__HOVERED};
+        border-color: {const.COLOR__FORM_BUTTON_BORDER__HOVERED};
+    }}
+    ComboBox::drop-down {{
+    }}
+    ComboBox::drop-down:button {{
+        image: url(resources/down_arrow_white.svg);
+        top: 8px;
+        right: 6px;
+        width: 10px;
+        height: 10px;
+        border-radius: {const.DIMENSION__BUTTONS_BORDER_RADIUS}px;
+    }}
+"""
+
 stylesheet_lists = f"""
     ListWidget {{
         background-color: {const.COLOR__FORM_FIELD__DEFAULT};
@@ -181,9 +218,24 @@ stylesheet_lists = f"""
 
 stylesheet_labels = f"""
     
-    #FormLabel {{
+    #FormLabel, Label {{
         background-color: transparent;
         color: {const.COLOR__TEXT};
+        
+        font-weight: {const.FONT_WEIGHT__FORM__PRIMARY};
+        font-style: {const.FONT_STYLE};
+        font-size: {const.FONT_SIZE_PX__TEXT}px;
+        font-family: "{const.FONT_FAMILY}";   
+        
+        padding-left: {const.DIMENSION__FORM_ELEMENT_PADDING_HORIZONTAL}px;
+        padding-right: {const.DIMENSION__FORM_ELEMENT_PADDING_HORIZONTAL}px;
+        padding-top: {const.DIMENSION__FORM_ELEMENT_PADDING_VERTICAL}px;
+        padding-bottom: {const.DIMENSION__FORM_ELEMENT_PADDING_VERTICAL}px;
+    }}
+    
+    #FormLabelMuted, LabelMuted {{
+        background-color: transparent;
+        color: {const.COLOR__TEXT_MUTED};
         
         font-weight: {const.FONT_WEIGHT__FORM__PRIMARY};
         font-style: {const.FONT_STYLE};
@@ -200,5 +252,6 @@ stylesheet_labels = f"""
 stylesheet = stylesheet_formgroup + \
              stylesheet_buttons + \
              stylesheet_lineedits + \
+             stylesheet_comboboxes + \
              stylesheet_lists + \
              stylesheet_labels

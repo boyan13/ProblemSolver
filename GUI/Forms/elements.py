@@ -1,12 +1,13 @@
 # +====================================================================================================================+
 # Pythonic
 from types import SimpleNamespace
+from typing import Dict, List, Tuple, Union, Any
 
 # Libs
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import QLineEdit, QGroupBox, QButtonGroup, QVBoxLayout, QListWidget, QListWidgetItem, \
-                            QRadioButton, QLabel, QPushButton
+                            QRadioButton, QLabel, QPushButton, QComboBox, QWidget, QLayout, QLayoutItem
 
 # Internal
 from GUI.Components.widgets import StyleEnabledMixin
@@ -88,12 +89,31 @@ class SizeHintAutomationMixin:
 
 class LineEdit(FormBoxHarvestableElementMixin, SizeHintAutomationMixin, StyleEnabledMixin, QLineEdit):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, numeric_only=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.set_size_hints('small')
 
+        if numeric_only:
+            self.setValidator(QtGui.QDoubleValidator())
+
     def harvest(self):
         return self.text()
+
+
+class ComboBox(FormBoxHarvestableElementMixin, SizeHintAutomationMixin, StyleEnabledMixin, QComboBox):
+
+    def __init__(self, choices: Dict[str, Any], *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.value_for_index = {}
+
+        for choice, value in choices.items():
+            self.addItem(choice)
+            index = self.findText(choice)
+            self.value_for_index[index] = value
+
+    def harvest(self):
+        return self.value_for_index[self.currentIndex()]
 
 
 class RadioButton(FormBoxNonHarvestableElementMixin, SizeHintAutomationMixin, StyleEnabledMixin, QRadioButton):
@@ -128,7 +148,7 @@ class GridRadioGroup(FormBoxHarvestableElementMixin, StyleEnabledMixin, QGroupBo
         super().__init__(*args, **kwargs)
         self.group = QButtonGroup()
 
-        self.grid = pyqt_utils.null_layout(QVBoxLayout(self))
+        self.grid = pyqt_utils.null_layout(QtWidgets.QGridLayout(self))
         self.__i = 0
         self.__j = 0
 
@@ -174,17 +194,20 @@ class GridRadioGroup(FormBoxHarvestableElementMixin, StyleEnabledMixin, QGroupBo
 
 class ListWidget(FormBoxHarvestableElementMixin, SizeHintAutomationMixin, StyleEnabledMixin, QListWidget):
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, read_only=False, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.set_size_hints('bigger', standard_hint_height=True, minimum_hint_height=True)
+        self._read_only = read_only
+
+    def set_read_only(self, value: bool):
+        self._read_only = value
 
     def harvest(self):
         return [self.item(i) for i in range(self.count())]
 
     def keyPressEvent(self, event):
-
         # Delete selected row on user pressing 'Delete'.
-        if event.key() == Qt.Key_Delete:
+        if event.key() == Qt.Key_Delete and not self._read_only:
             for item in self.selectedItems():
                 row = self.row(item)
                 self.takeItem(row)
@@ -209,7 +232,11 @@ class ListWidgetItem(QListWidgetItem):
 class Label(FormBoxNonHarvestableElementMixin, SizeHintAutomationMixin, StyleEnabledMixin, QLabel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.set_size_hints('small')
+
+
+class LabelMuted(FormBoxNonHarvestableElementMixin, SizeHintAutomationMixin, StyleEnabledMixin, QLabel):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 class CheckButton(FormBoxNonHarvestableElementMixin, SizeHintAutomationMixin, StyleEnabledMixin, QPushButton):

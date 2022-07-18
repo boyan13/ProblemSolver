@@ -55,7 +55,7 @@ stylesheet = f"""
         color: {const.COLOR__TEXT_MUTED};
         
         border-style: solid;
-        border-top-right-radius: 9px;
+        border-top-right-radius: 7px;
         
         min-width: {const.DIMENSION__WINDOW_BUTTONS_WIDTH}px;
         max-width: {const.DIMENSION__WINDOW_BUTTONS_WIDTH}px;
