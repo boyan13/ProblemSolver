@@ -395,11 +395,10 @@ class RankingsFormBoxes:
         hbox.add(15.0, 1, vbox, 1, 15.0)
         vbox.add(15.0, 1, lay, 1, 15.0)
 
-
         try:
             ranking = backend.process()
         except AHPException:
-            problem = Label(str(AHPException))
+            problem = Label(text=str(AHPException))
             lay.addRow("A problem occurred:", label_muted=True)
             box.set(problem=problem)
             return

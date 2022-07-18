@@ -81,7 +81,9 @@ class DataModel:
 
 
 class AHPException(Exception):
-    pass
+    def __init__(self, text="AHP Exception"):
+        self.text = text
+        super().__init__(self.text)
 
 
 class AHPTitledResult:
@@ -557,4 +559,4 @@ class AHPModel:
 
     def process(self, log=False):
         processor = self.backend_class(self.data_model, self.importance_matrix)
-        processor.process(log=log)
+        return processor.process(log=log)
