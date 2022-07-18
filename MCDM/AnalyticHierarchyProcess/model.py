@@ -265,7 +265,7 @@ class AHPProcessor:
 
         if not cval['cr'].value < 0.10:
             raise AHPException(
-                "Pairwise matrix is not consistent. CR={0:.0%}".format(cval['cr'].value) +
+                "Pairwise matrix is not consistent. CR={0} ({0:.0%})".format(cval['cr'].value) +
                 ", which violates the maximum threshold of 10%."
             )
 
