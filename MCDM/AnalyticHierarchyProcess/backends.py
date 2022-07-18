@@ -112,10 +112,17 @@ class AHPProcessor:
         cvec = self.storage['criteria']['vectors']
         cval = self.storage['criteria']['values']
 
+        # ----------------------------------------------------------------------------------------------------
+        # Log the initial state
+        if log:
+            self._log(Pd_DataFrameMatrix('Importance matrix', self.importance_matrix))
+        # ----------------------------------------------------------------------------------------------------
+
         # Parse the Importance matrix into the decimal Pairwise Criteria matrix.
         cmat['pairwise'] = self.compute__parse_importance_matrix(self.importance_matrix)
 
         # ----------------------------------------------------------------------------------------------------
+        # Log the pairwise matrix
         if log:
             self._log(cmat['pairwise'])
         # ----------------------------------------------------------------------------------------------------
@@ -124,6 +131,7 @@ class AHPProcessor:
         cmat['normalized'], cvec['sum'] = self.compute__normalized_pairwise_matrix(cmat['pairwise'])
 
         # ----------------------------------------------------------------------------------------------------
+        # Log the normalized pairwise matrix with the column sums
         if log:
             self._log(cmat['normalized'], extra_rows=py_utils.get_multiple(cvec, 'sum'))
         # ----------------------------------------------------------------------------------------------------
@@ -132,6 +140,7 @@ class AHPProcessor:
         cvec['priority'] = self.compute__priority_vector(cmat['normalized'])
 
         # ----------------------------------------------------------------------------------------------------
+        # Log the pairwise matrix with the priority vector
         if log:
             self._log(cmat['pairwise'], extra_cols=py_utils.get_multiple(cvec, 'priority'))
         # ----------------------------------------------------------------------------------------------------
@@ -146,6 +155,7 @@ class AHPProcessor:
         cval['lambda_max'] = self.compute__eigen_value(cmat['pairwise'], cvec['priority'])
 
         # ----------------------------------------------------------------------------------------------------
+        # Log the eigenvalue lambda_max
         if log:
             self._log(caption='Eigen value', extra_values=py_utils.get_multiple(cval, 'lambda_max'))
         # ----------------------------------------------------------------------------------------------------
@@ -160,10 +170,10 @@ class AHPProcessor:
         )
 
         # ----------------------------------------------------------------------------------------------------
+        # Log the consistency values
         if log:
             self._log(
-                caption='Consistency data', extra_values=py_utils.get_multiple(cval, 'lambda_max', 'ci', 'ri', 'cr')
-            )
+                caption='Consistency data', extra_values=py_utils.get_multiple(cval, 'lambda_max', 'ci', 'ri', 'cr'))
         # ----------------------------------------------------------------------------------------------------
 
         if not cval['cr'].value < self.consistency_threshold:
@@ -214,17 +224,13 @@ class AHPProcessor:
 
                 alternatives_matrix.at[alternative, criterion] = normalized_value
 
-        # ----------------------------------------------------------------------------------------------------
-        if log:
-            self._log(Pd_DataFrameMatrix('Alternatives normalized matrix', alternatives_matrix),
-                  extra_rows=py_utils.get_multiple(cvec, 'priority'))
-        # ----------------------------------------------------------------------------------------------------
-
+        # The alternatives and their ranks
         rankings = {}
 
         # map each criterion to its weight
         weights = {c: w for c, w in zip(self.data_model.criteria, cvec['priority'].value)}
 
+        # Perform ranking
         for alternative in alternatives_matrix.index:
             alternative_ranking = 0
 
