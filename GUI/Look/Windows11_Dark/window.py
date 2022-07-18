@@ -3,14 +3,15 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QSizePolicy, QVBoxLayout, QHBoxLayout
+
 # Internal
 from GUI.Base.window import *
-from GUI.Utilities.pyqt_utilities import null_layout
 from GUI.Components.mixins import RoundEdgesMixin
 from GUI.Components.widgets import StyledWidget, MaterialIconButton
 from GUI.Look.Windows11_Dark import constants as const
-from GUI.Look.Windows11_Dark.stylesheet import Windows11_Dark_stylesheet
 from GUI.Look.Windows11_Dark.Elements.title_bar_buttons import MinimizeButton, FullscreenButton, CloseButton
+from GUI.Look.Windows11_Dark.stylesheet import Windows11_Dark_stylesheet
+from GUI.Utilities.pyqt_utilities import null_layout
 # +====================================================================================================================+
 
 

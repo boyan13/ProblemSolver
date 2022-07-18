@@ -1,44 +1,8 @@
 # +====================================================================================================================+
 # Pythonic
-from typing import Any
 from enum import Enum
+from typing import Any
 # +====================================================================================================================+
-
-
-class DataType(Enum):
-
-    @classmethod
-    def from_string(cls, value: str):
-        for e in cls:
-            if e.name == value:
-                return e
-
-    Quantitative = 1
-    Qualitative = 2
-
-
-class DataGoal(Enum):
-
-    @classmethod
-    def from_string(cls, value: str):
-        for e in cls:
-            if e.name == value:
-                return e
-
-    Minimize = 1
-    Maximize = 2
-
-
-class QualitativeValue(Enum):
-    ExceptionallyBad = 1
-    ExtremelyBad = 2
-    VeryBad = 3
-    Bad = 4
-    Neutral = 5
-    Good = 6
-    VeryGood = 7
-    ExtremelyGood = 8
-    ExceptionallyGood = 9
 
 
 class Important(Enum):

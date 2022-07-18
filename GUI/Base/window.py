@@ -5,7 +5,6 @@ from typing import Union
 
 # Libs
 from PyQt5.QtWidgets import QWidget, QMenuBar, QAction, QStatusBar, QPushButton, QScrollArea
-from PyQt5.QtCore import pyqtSignal, QObject
 
 # Internal
 from GUI.Components.widgets import StyledWidget, StyleEnabledMixin, StyledStackedWidget
@@ -110,9 +109,10 @@ class BaseWindow:
         if ok:
             self.view.set_view(how)
 
-    def new_action(self, menu, text):
+    def new_action(self, menu, text, handle):
         a = QAction(text, self)
         menu.addAction(a)
+        menu.actions()[-1].triggered.connect(handle)
 
     def get_key(self, view: Union[str, int, QWidget], as_int=False, as_str=False, as_widget=False):
         int_, str_, wgt_ = None, None, None

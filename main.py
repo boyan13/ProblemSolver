@@ -6,10 +6,11 @@ import sys
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtWidgets import QApplication
 
+from App import configuration
 # Internal
 from App.configuration import AppStyle
-from App import configuration
 from GUI.Look.Windows11_Dark.window import StylizedBaseWindow as BaseWindow__Windows11_Dark
+
 # +====================================================================================================================+
 
 

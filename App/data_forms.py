@@ -1,54 +1,18 @@
 # +====================================================================================================================+
 # Pythonic
-from typing import List, Dict, Any, Tuple, Union
+from typing import List
 
 # Libs
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QFormLayout, QSizePolicy
+from PyQt5.QtWidgets import QHBoxLayout, QSizePolicy
 
 # Internal
-from MCDM.AnalyticHierarchyProcess.model import DataModel, AHPException
-from MCDM.AnalyticHierarchyProcess.enums import DataGoal, DataType, QualitativeValue, Important
-from GUI.Utilities import pyqt_utilities as pyqt_utils
-from GUI.Forms.elements import *
 from GUI.Components.layouts import ExtendedHBox, ExtendedVBox
+from GUI.Forms.elements import *
+from GUI.Forms.layouts import FormLayout
+from GUI.Forms.widgets import *
+from MCDM.Data.enums import DataType, QualitativeValue
+from MCDM.Data.model import DataModel
 # +====================================================================================================================+
-
-
-class FormLayout(QFormLayout):
-    OBJECT_NAME_FOR_LABELS = 'FormLabel'
-    OBJECT_NAME_FOR_LABELS_MUTED = 'FormLabelMuted'
-
-    def addRow(self, label: typing.Union[QWidget, str] = None, field: QWidget = None, label_muted=False) -> None:
-        if label is not None:
-            super().addRow(label, field)
-            if type(label) is str:
-                if label_muted:
-                    self.labelForField(field).setObjectName(self.OBJECT_NAME_FOR_LABELS_MUTED)
-                else:
-                    self.labelForField(field).setObjectName(self.OBJECT_NAME_FOR_LABELS)
-        else:
-            super().addRow(field)
-
-
-class FormBox(FormBoxMixin, QGroupBox):
-    pass
-
-
-class FormGroupsNamespace(SimpleNamespace):
-
-    def __setattr__(self, key, value):
-        if not isinstance(value, FormBox):
-            raise TypeError(f"You may only add {FormBox.__name__} instances.")
-        super().__setattr__(key, value)
-
-    def __getattribute__(self, item) -> FormBox:
-        return super().__getattribute__(item)
-
-    def __iter__(self):
-        return iter([getattr(self, a) for a in self.__dict__.keys()])
-
-    def __len__(self):
-        return len(self.__dict__.keys())
 
 
 class CriteriaFormBoxes:
@@ -100,7 +64,7 @@ class CriteriaFormBoxes:
         criteria_add = CheckButton(text="ADD")
         criteria_del = CheckButton(text="DELETE")
         criteria_type = ColumnRadioGroup(texts=["Quantitative", "Qualitative"], is_harvestable=False)
-        criteria_goal = ColumnRadioGroup(texts=["Minimize", "Maximize"], is_harvestable=False)
+        criteria_goal = ColumnRadioGroup(texts=["Minimize", "Maximize"], initial=1, is_harvestable=False)
         criteria_list = ListWidget()
 
         # Assign to boxes
@@ -117,10 +81,7 @@ class CriteriaFormBoxes:
         )
 
         # Configure
-
         criteria_name.setPlaceholderText("Name")
-        criteria_type.group.buttons()[0].setChecked(True)
-        criteria_goal.group.buttons()[0].setChecked(True)
 
         # Connect
 
@@ -335,94 +296,3 @@ class ValuesFormBoxes:
                 box.set_as_pairs((alternative, input_widget))
 
             self.form_groups.append(box)
-
-
-class WeightsFormBoxes:
-
-    def __init__(self, data_model: DataModel):
-        self.form_groups: List[FormBox] = []
-        self._setup_view(data_model)
-
-    def _setup_view(self, data_model: DataModel):
-
-        box = FormBox(title='Compare')
-        self.form_groups.append(box)
-
-        hbox = ExtendedHBox(box, spacing=15)
-        vbox = ExtendedVBox(spacing=15)
-        lay = FormLayout()
-        lay.setSpacing(10)
-        hbox.add(15.0, 1, vbox, 1, 15.0)
-        vbox.add(15.0, 1, lay, 1, 15.0)
-
-        choices = {}
-        for e in Important:
-            choice = "(" + str(e) + ") " + e.name
-            choices[choice] = e.value
-
-        pairs = data_model.get_minimum_pairs()
-        for pair in pairs:
-            text1 = LabelMuted(text="Importance of ")
-            text1.set_size_hints('')
-            criteria1 = Label(text=pair[0])
-            text2 = LabelMuted(text=" over ")
-            criteria2 = Label(text=pair[1])
-
-            importance = ComboBox(choices=choices)
-            importance.setCurrentIndex(8)
-
-            hbox = ExtendedHBox()
-            hbox.add(text1, criteria1, text2, criteria2, 1, importance)
-            lay.addRow(field=hbox)
-            box.set_as_pairs((criteria1.text() + '_____' + criteria2.text(), importance))
-
-
-class RankingsFormBoxes:
-
-    def __init__(self, data_model: DataModel, backend):
-        self.form_groups: List[FormBox] = []
-        self._setup_view(data_model, backend)
-
-    def _setup_view(self, data_model: DataModel, backend):
-
-        box = FormBox(title='Ranking')
-        self.form_groups.append(box)
-
-        hbox = ExtendedHBox(box, spacing=15)
-        vbox = ExtendedVBox(spacing=15)
-        lay = FormLayout()
-        lay.setSpacing(10)
-        hbox.add(15.0, 1, vbox, 1, 15.0)
-        vbox.add(15.0, 1, lay, 1, 15.0)
-
-        try:
-            ranking = backend.process()
-        except AHPException as exc:
-            problem = Label(text=exc.text)
-            problem.setWordWrap(True)
-            box.setTitle("Error")
-            lay.addRow(label="A problem occurred:", field=problem, label_muted=True)
-            box.set(problem=problem)
-            return
-
-        ranking_chart = ListWidget(read_only=True)
-        lay.addRow(field=ranking_chart)
-
-        reverse_map = {}
-        values = []
-
-        for alternative, rank in ranking.items():
-            if rank not in reverse_map.keys():
-                reverse_map[rank] = []
-            reverse_map[rank].append(alternative)
-            values.append(rank)
-
-        values.sort(reverse=True)
-
-        for value in values:
-            alternative = reverse_map[value].pop(0)
-            text = f"({str(value)})  {alternative}"
-            item = ListWidgetItem(text)
-            ranking_chart.addItem(item)
-
-        box.set(scores=ranking_chart)

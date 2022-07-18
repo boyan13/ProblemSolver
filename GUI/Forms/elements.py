@@ -1,13 +1,13 @@
 # +====================================================================================================================+
 # Pythonic
 from types import SimpleNamespace
-from typing import Dict, List, Tuple, Union, Any
+from typing import Dict, Any
 
 # Libs
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import QLineEdit, QGroupBox, QButtonGroup, QVBoxLayout, QListWidget, QListWidgetItem, \
-                            QRadioButton, QLabel, QPushButton, QComboBox, QWidget, QLayout, QLayoutItem
+    QRadioButton, QLabel, QPushButton, QComboBox
 
 # Internal
 from GUI.Components.widgets import StyleEnabledMixin
@@ -124,64 +124,19 @@ class RadioButton(FormBoxNonHarvestableElementMixin, SizeHintAutomationMixin, St
 
 
 class ColumnRadioGroup(FormBoxHarvestableElementMixin, StyleEnabledMixin, QGroupBox):
-    def __init__(self, texts, *args, **kwargs):
+    def __init__(self, texts, initial: int = 0, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.initial = initial
         self.group = QButtonGroup()
         self.vbox = pyqt_utils.null_layout(QVBoxLayout(self))
+
         for text in texts:
             b = RadioButton(parent=self)
             b.setText(text)
             self.group.addButton(b)
             self.vbox.addWidget(b)
 
-    def harvest(self):
-        try:
-            text = self.group.checkedButton().text()
-        except Exception:
-            return None
-        else:
-            return text
-
-
-class GridRadioGroup(FormBoxHarvestableElementMixin, StyleEnabledMixin, QGroupBox):
-    def __init__(self, texts, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.group = QButtonGroup()
-
-        self.grid = pyqt_utils.null_layout(QtWidgets.QGridLayout(self))
-        self.__i = 0
-        self.__j = 0
-
-        for text in texts:
-            b = RadioButton(parent=self)
-            b.setText(text)
-            self.group.addButton(b)
-
-        for button in self.group.buttons():
-            self.__add(button)
-
-    def __add(self, button):
-        self.grid.addWidget(self.__i, self.__j, button)
-
-        i, j = self.__i, self.__j
-        r, c = self.grid.rowCount(), self.grid.columnCount()
-
-        if i == j == r - 1 == c - 1:
-            self.__i = 0
-            self.__j = c
-
-        elif i < j - 1:
-            self.__i += 1
-
-        elif i == j - 1:
-            self.__i = j
-            self.__j = 0
-
-        elif i > j:
-            self.__j += 1
-
-        else:
-            raise RuntimeError("It should not be possible to get here.")
+        self.group.buttons()[initial].setChecked(True)
 
     def harvest(self):
         try:

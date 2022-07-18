@@ -1,3 +1,5 @@
+
+# Yeah, this isn't really cool, but it'll do for now it's just to set the right font if on Windows
 import platform
 
 which_os = platform.system()

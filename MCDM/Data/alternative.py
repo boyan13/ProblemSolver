@@ -1,9 +1,10 @@
 # +====================================================================================================================+
 # Pythonic
 import typing
+
 # Internal
-from MCDM.AnalyticHierarchyProcess.criteria import Criteria
-from MCDM.AnalyticHierarchyProcess.enums import *
+from MCDM.Data.enums import DataType, DataGoal, QualitativeValue
+from MCDM.Data.criteria import Criteria
 # +====================================================================================================================+
 
 
