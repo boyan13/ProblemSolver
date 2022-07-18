@@ -233,6 +233,13 @@ class AHPProcessor:
 
             rankings[alternative] = alternative_ranking
 
+        # ----------------------------------------------------------------------------------------------------
+        if log:
+            self._log(Pd_DataFrameMatrix('Alternatives normalized matrix', alternatives_matrix), caption='Ranking',
+                      extra_rows=py_utils.get_multiple(cvec, 'priority'),
+                      extra_values=[Python_NumericValue('Ranking: ' + k, v) for k, v in rankings.items()])
+        # ----------------------------------------------------------------------------------------------------
+
         return rankings
 
         # for criteria in self.data_model.criteria:
