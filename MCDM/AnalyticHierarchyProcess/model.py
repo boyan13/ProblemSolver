@@ -429,7 +429,10 @@ class AHPProcessor:
     def compute__consistency_data(lambda_max: AHP_PythonNumericValue, pairwise_matrix_dimension: int):
         lmax = lambda_max.value
         n = pairwise_matrix_dimension
-        ci = (lmax - n) / (n - 1)
+        if n != 1:
+            ci = (lmax - n) / (n - 1)
+        else:
+            ci = 0
         ri = AHPProcessor.saaty_random_index_table()[n]
         cr = ci / ri if ri > 0 else 0
 

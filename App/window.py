@@ -186,8 +186,12 @@ class WeightsForm(FormView):
 
         boxes = WeightsFormBoxes(self.data_model).form_groups
         self.boxes = boxes
+        box = boxes[0]
 
-        form_grid.addWidget(boxes[0], 0, 0)
+        if len(box.elements_attributes) == 0:
+            box.setMinimumWidth(500)
+
+        form_grid.addWidget(box, 0, 0)
 
         self.setMinimumWidth(500)
 
